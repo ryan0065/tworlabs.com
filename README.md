@@ -86,7 +86,7 @@ The function reads `env.SIGNUPS`. No environment variables or secrets are requir
 
 Git builds use the dashboard root directory `production`, so they do **not** read the repo-root `wrangler.toml`. The dashboard binding above is what production uses.
 
-`wrangler.toml` is for Wrangler itself (`pages_build_output_dir = "./production"` and the same `SIGNUPS` binding). If you deploy with `npx wrangler pages deploy` instead of Git, replace `<NAMESPACE_ID>` in that file first. A Wrangler file that Pages treats as the source of truth locks the matching dashboard fields.
+`wrangler.toml` is for Wrangler itself (`pages_build_output_dir = "./production"` and the same `SIGNUPS` binding, namespace id `0b522ad5f19244a6b5e3fcd58425440f`). A Wrangler file that Pages treats as the source of truth locks the matching dashboard fields.
 
 ### Read the signups
 

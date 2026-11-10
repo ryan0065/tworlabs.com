@@ -10,8 +10,6 @@ name = "tworlabs"
 pages_build_output_dir = "./production"
 compatibility_date = "2026-11-10"
 
-# Create the namespace, then replace the id:
-#   npx wrangler kv namespace create SIGNUPS
 [[kv_namespaces]]
 binding = "SIGNUPS"
-id = "<NAMESPACE_ID>"
+id = "0b522ad5f19244a6b5e3fcd58425440f"
