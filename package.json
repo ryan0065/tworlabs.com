@@ -1,0 +1,10 @@
+{
+  "name": "tworlabs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/subscribe.test.mjs",
+    "preview": "node scripts/preview.mjs",
+    "dev": "wrangler pages dev --kv SIGNUPS"
+  }
+}

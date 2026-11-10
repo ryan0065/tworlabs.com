@@ -1,0 +1,17 @@
+# Pages config for commands run from the repository root:
+#   npx wrangler pages dev
+#   npx wrangler pages deploy
+#
+# Git deploys on Cloudflare Pages should set the project root directory to
+# `production` (see README). That mode does not read this file, so the SIGNUPS
+# binding also has to be added in the dashboard. There are no environment variables.
+
+name = "tworlabs"
+pages_build_output_dir = "./production"
+compatibility_date = "2026-11-10"
+
+# Create the namespace, then replace the id:
+#   npx wrangler kv namespace create SIGNUPS
+[[kv_namespaces]]
+binding = "SIGNUPS"
+id = "<NAMESPACE_ID>"
