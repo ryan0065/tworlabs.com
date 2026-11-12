@@ -149,9 +149,47 @@
         </a>
       </li>
     </ul>
+
+    <section class="lab-notes" id="lab-notes" aria-labelledby="lab-notes-heading">
+      <h2 id="lab-notes-heading" class="pixel-title lab-title">Lab Notes</h2>
+      <p class="lab-intro">What Ridge and Rhett have been building lately.</p>
+      <div id="lab-notes-latest" class="lab-list">
+        <p class="lab-loading">Loading Lab Notes&hellip;</p>
+      </div>
+      <p style="text-align:center"><a class="button" href="/lab-notes/">See all Lab Notes</a></p>
+    </section>
   </main>
 
   <div class="ground" aria-hidden="true"></div>
   <script src="/js/main.js" defer></script>
+
+  <script>
+    (function () {
+      var list = document.getElementById("lab-notes-latest");
+      if (!list) return;
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c];
+        });
+      }
+      fetch("/lab-notes.json")
+        .then(function (r) { if (!r.ok) throw new Error("Lab Notes not found"); return r.json(); })
+        .then(function (data) {
+          var entries = ((data && data.entries) || []).slice(0, 3);
+          if (!entries.length) { list.innerHTML = "<p>No Lab Notes yet. Check back soon!</p>"; return; }
+          list.innerHTML = entries.map(function (e) {
+            return '<article class="lab-card">' +
+              '<p class="lab-meta"><time datetime="' + esc(e.date) + '">' + esc(e.date_display) + '</time> \u00b7 ' + esc(e.who) + ' \u00b7 ' + esc(e.game) + '</p>' +
+              '<h2 class="lab-card-title">' + esc(e.title) + '</h2>' +
+              '<p>' + esc(e.note) + '</p>' +
+              '<p><a class="button" href="' + esc(e.play_url) + '">Play this version</a></p>' +
+              '</article>';
+          }).join("");
+        })
+        .catch(function () {
+          list.innerHTML = "<p>Lab Notes could not be loaded right now. Please try again in a minute.</p>";
+        });
+    })();
+  </script>
 </body>
 </html>
