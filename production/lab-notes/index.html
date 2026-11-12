@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab Notes — TwoRLabs</title>
+  <meta name="description" content="Lab Notes from TwoRLabs: what Ridge and Rhett have been building lately.">
+  <link rel="canonical" href="https://tworlabs.com/lab-notes/">
+  <meta name="theme-color" content="#02205A">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TwoRLabs">
+  <meta property="og:url" content="https://tworlabs.com/lab-notes/">
+  <meta property="og:title" content="Lab Notes — TwoRLabs">
+  <meta property="og:description" content="What Ridge and Rhett have been building lately.">
+  <meta property="og:image" content="https://tworlabs.com/assets/og.jpg">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon-32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/favicon-16.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="scenery" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="stars stars-lg"></div>
+    <span class="spark s1"></span>
+    <span class="spark s2"></span>
+    <span class="spark s3 gold"></span>
+    <span class="spark s4"></span>
+    <span class="spark s5 gold"></span>
+    <span class="spark s6"></span>
+    <span class="spark s7"></span>
+    <span class="spark s8 gold"></span>
+    <img class="cloud k1" src="/assets/cloud.png" alt="" width="160" height="60">
+    <img class="cloud k2" src="/assets/cloud-b.png" alt="" width="130" height="50">
+    <img class="cloud k3" src="/assets/cloud.png" alt="" width="160" height="60">
+    <img class="cloud k4" src="/assets/cloud-b.png" alt="" width="130" height="50">
+    <img class="cloud k5" src="/assets/cloud.png" alt="" width="160" height="60">
+    <img class="tree ta" src="/assets/tree-c.png" alt="" width="180" height="140">
+    <img class="tree tb" src="/assets/tree-a.png" alt="" width="160" height="110">
+    <img class="rock ra" src="/assets/rock.png" alt="" width="60" height="40">
+    <img class="tree tc" src="/assets/tree-c.png" alt="" width="180" height="140">
+    <img class="tree td" src="/assets/tree-b.png" alt="" width="120" height="90">
+    <img class="rock rb" src="/assets/rock.png" alt="" width="60" height="40">
+  </div>
+
+  <main id="main">
+    <h1 class="pixel-title lab-title">Lab Notes</h1>
+    <p class="tagline">What Ridge and Rhett have been building lately.</p>
+    <p><a class="button" href="/">Back home</a></p>
+    <div id="lab-notes-all" class="lab-list">
+      <p class="lab-loading">Loading Lab Notes…</p>
+    </div>
+    <noscript>
+      <div class="lab-list">
+        <article class="lab-card">
+          <p class="lab-meta"><time datetime="2026-11-11">Nov 11, 2026</time> · Ridge · Ridge World</p>
+          <h2 class="lab-card-title">Ridge World — Update 3</h2>
+          <p>New Easter egg added.</p>
+          <p><a class="button" href="/games/ridge-world/v10/">Play this version</a></p>
+        </article>
+        <article class="lab-card">
+          <p class="lab-meta"><time datetime="2026-11-11">Nov 11, 2026</time> · Ridge · Ridge World</p>
+          <h2 class="lab-card-title">Ridge World — Update 2</h2>
+          <p>New Easter egg added.</p>
+          <p><a class="button" href="/games/ridge-world/v9/">Play this version</a></p>
+        </article>
+        <article class="lab-card">
+          <p class="lab-meta"><time datetime="2026-11-11">Nov 11, 2026</time> · Ridge · Ridge World</p>
+          <h2 class="lab-card-title">Ridge World — Move controller moved</h2>
+          <p>The move controller is now up and to the right by about one button height, so it is easier to reach while you play.</p>
+          <p><a class="button" href="/games/ridge-world/v8/">Play this version</a></p>
+        </article>
+      </div>
+    </noscript>
+  </main>
+
+  <div class="ground" aria-hidden="true"></div>
+  <script>
+    (function () {
+      var list = document.getElementById("lab-notes-all");
+      if (!list) return;
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c];
+        });
+      }
+      fetch("/lab-notes.json")
+        .then(function (r) { if (!r.ok) throw new Error("Lab Notes not found"); return r.json(); })
+        .then(function (data) {
+          var entries = (data && data.entries) || [];
+          if (!entries.length) { list.innerHTML = "<p>No Lab Notes yet. Check back soon!</p>"; return; }
+          list.innerHTML = entries.map(function (e) {
+            return '<article class="lab-card">' +
+              '<p class="lab-meta"><time datetime="' + esc(e.date) + '">' + esc(e.date_display) + '</time> · ' + esc(e.who) + ' · ' + esc(e.game) + '</p>' +
+              '<h2 class="lab-card-title">' + esc(e.title) + '</h2>' +
+              '<p>' + esc(e.note) + '</p>' +
+              '<p><a class="button" href="' + esc(e.play_url) + '">Play this version</a></p>' +
+              '</article>';
+          }).join("");
+        })
+        .catch(function () {
+          list.innerHTML = "<p>Lab Notes could not be loaded right now. Please try again in a minute.</p>";
+        });
+    })();
+  </script>
+</body>
+</html>
