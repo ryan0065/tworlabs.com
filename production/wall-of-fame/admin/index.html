@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Review Photos — TwoRLabs</title>
+  <meta name="description" content="Dad's photo review page for the TwoRLabs Wall of Fame.">
+  <meta name="theme-color" content="#02205A">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main id="main">
+    <h1 class="pixel-title lab-title">Review Photos</h1>
+    <p class="tagline">Photos waiting for Dad's OK before they go on the Wall of Fame.</p>
+    <p><a class="button" href="/wall-of-fame/">Wall of Fame</a> <a class="button" href="/">Back home</a></p>
+    <div id="admin-photos" class="photo-grid">
+      <p class="lab-loading">Loading photos waiting for review…</p>
+    </div>
+    <p id="admin-status" role="status"></p>
+    <noscript>
+      <p>This page needs JavaScript to review photos.</p>
+    </noscript>
+  </main>
+
+  <div class="ground" aria-hidden="true"></div>
+    <script src="/js/wall-of-fame-admin.js" defer></script>
+</body>
+</html>
