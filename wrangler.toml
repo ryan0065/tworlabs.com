@@ -14,4 +14,9 @@ compatibility_date = "2026-11-10"
 #   npx wrangler kv namespace create SIGNUPS
 [[kv_namespaces]]
 binding = "SIGNUPS"
-id = "<NAMESPACE_ID>"
+id = "0b522ad5f19244a6b5e3fcd58425440f"
+
+# Scores + photos for the Wall of Fame (see production/functions/api/).
+[[kv_namespaces]]
+binding = "tworlabs_wall"
+id = "575da04e83114c6e80fc3c72ed0f091d"
