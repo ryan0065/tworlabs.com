@@ -1,0 +1,1633 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Moses — Escape from Egypt</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f3e7cf;
+        --panel: #fffaf0;
+        --panel-edge: #d9b878;
+        --ink: #2e2118;
+        --ink-soft: #6b5844;
+        --accent: #b3541e;
+        --accent-ink: #ffffff;
+        --gold: #d9a441;
+        --nile: #1d6f8e;
+        --good: #2e7d46;
+        --danger: #b3372c;
+        --hud-bg: rgba(46, 33, 24, 0.88);
+        --hud-ink: #fdf3dd;
+        --shadow: 0 10px 30px rgba(46, 33, 24, 0.25);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #171310;
+          --panel: #241c16;
+          --panel-edge: #5a4630;
+          --ink: #f3e7cf;
+          --ink-soft: #c4ab8a;
+          --accent: #d97b3f;
+          --gold: #e0aa4e;
+          --hud-bg: rgba(20, 14, 10, 0.92);
+          --shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Nunito", system-ui, -apple-system, sans-serif;
+        overscroll-behavior: none;
+      }
+      button { font-family: inherit; cursor: pointer; }
+      button, [role="button"], select, summary { min-height: 2.25rem; }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 10px 12px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 100%;
+      }
+
+      /* ---------- HUD ---------- */
+      .hud {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        background: var(--hud-bg);
+        color: var(--hud-ink);
+        border-radius: 14px;
+        padding: 8px 12px;
+      }
+      .hud .scene-name {
+        font-family: "Baloo 2", sans-serif;
+        font-weight: 800;
+        font-size: 1.02rem;
+        line-height: 1.15;
+        min-width: 0;
+      }
+      .hud .scene-name small {
+        display: block;
+        font-family: "Nunito", sans-serif;
+        font-weight: 700;
+        font-size: 0.72rem;
+        opacity: 0.75;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .hud .spacer { flex: 1; }
+      .hud-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        padding: 5px 11px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+      .hud-chip .heart { color: #ff7a6b; font-size: 1rem; line-height: 1; }
+      .hud-chip .heart.lost { color: rgba(255,255,255,0.25); }
+      .icon-btn {
+        border: none;
+        background: rgba(255, 255, 255, 0.14);
+        color: var(--hud-ink);
+        border-radius: 10px;
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        font-size: 1.05rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        font-weight: 800;
+      }
+      .icon-btn:active { transform: scale(0.94); }
+
+      .journey-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ink) 14%, transparent);
+        overflow: hidden;
+      }
+      .journey-bar > div {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--gold), var(--accent));
+        border-radius: 999px;
+        transition: width 0.5s ease;
+      }
+      .journey-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--ink-soft);
+        margin-top: -4px;
+      }
+
+      .goal-banner {
+        display: none;
+        background: var(--panel);
+        border: 2px solid var(--panel-edge);
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        box-shadow: var(--shadow);
+      }
+      .goal-banner.show { display: block; }
+      .goal-banner b { color: var(--accent); }
+
+      /* ---------- Stage ---------- */
+      .stage {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        background: #87b5c9;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      canvas#game {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        max-height: 62vh;
+        touch-action: none;
+      }
+      @media (orientation: portrait) {
+        canvas#game { aspect-ratio: 4 / 3.4; max-height: 58vh; }
+      }
+
+      /* ---------- Overlays ---------- */
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+        background: rgba(24, 16, 10, 0.55);
+        z-index: 5;
+        overflow-y: auto;
+      }
+      .overlay.show { display: flex; }
+      /* On phones the stage is short — let menu cards use the full screen
+         height so every button stays reachable. */
+      @media (max-width: 700px) {
+        .overlay { position: fixed; z-index: 60; }
+      }
+      .card {
+        background: var(--panel);
+        color: var(--ink);
+        border: 3px solid var(--panel-edge);
+        border-radius: 18px;
+        padding: 20px 22px;
+        max-width: 560px;
+        width: 100%;
+        max-height: 100%;
+        overflow-y: auto;
+        box-shadow: var(--shadow);
+        margin: auto;
+      }
+      .card h1, .card h2 {
+        font-family: "Baloo 2", sans-serif;
+        margin: 0 0 6px;
+        line-height: 1.1;
+      }
+      .card h1 { font-size: clamp(1.7rem, 5.2vw, 2.6rem); }
+      .card h2 { font-size: clamp(1.3rem, 4vw, 1.8rem); }
+      .card p { margin: 8px 0; line-height: 1.5; }
+      .ref {
+        display: inline-block;
+        font-weight: 800;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--nile);
+        background: color-mix(in srgb, var(--nile) 12%, transparent);
+        padding: 3px 10px;
+        border-radius: 999px;
+      }
+      .part-label {
+        font-weight: 800;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 2px;
+      }
+      .goal-line {
+        background: color-mix(in srgb, var(--gold) 18%, transparent);
+        border-radius: 10px;
+        padding: 9px 12px;
+        font-weight: 700;
+      }
+      .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+      .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-family: "Baloo 2", sans-serif;
+        font-weight: 800;
+        font-size: 1.05rem;
+        min-height: 3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .btn-primary { background: var(--accent); color: var(--accent-ink); }
+      .btn-primary:active { transform: scale(0.97); }
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink);
+        border: 2px solid var(--panel-edge);
+      }
+      .btn-ghost:active { transform: scale(0.97); }
+      .howto {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 14px;
+        font-size: 0.92rem;
+        margin-top: 10px;
+      }
+      .howto div b { color: var(--accent); }
+      @media (max-width: 520px) { .howto { grid-template-columns: 1fr; } }
+
+      .scene-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .scene-pick {
+        text-align: left;
+        border: 2px solid var(--panel-edge);
+        background: color-mix(in srgb, var(--panel) 60%, var(--bg));
+        color: var(--ink);
+        border-radius: 12px;
+        padding: 9px 11px;
+        font-weight: 700;
+        font-size: 0.86rem;
+        line-height: 1.25;
+        min-height: 3.2rem;
+      }
+      .scene-pick .n {
+        display: block;
+        font-size: 0.7rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        font-weight: 800;
+      }
+      .scene-pick.done { border-color: var(--good); }
+      .scene-pick.done .n::after { content: " ✓"; color: var(--good); }
+      .scene-pick:active { transform: scale(0.97); }
+
+      .toast {
+        position: absolute;
+        left: 50%;
+        top: 12px;
+        transform: translateX(-50%) translateY(-8px);
+        background: var(--hud-bg);
+        color: var(--hud-ink);
+        font-family: "Baloo 2", sans-serif;
+        font-weight: 800;
+        font-size: clamp(1rem, 3.4vw, 1.35rem);
+        padding: 8px 20px;
+        border-radius: 999px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        z-index: 6;
+        text-align: center;
+        max-width: 92%;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+      .prompt-tag {
+        position: absolute;
+        left: 50%;
+        bottom: 96px;
+        transform: translateX(-50%);
+        background: var(--gold);
+        color: #2e2118;
+        font-weight: 800;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        display: none;
+        z-index: 4;
+        box-shadow: var(--shadow);
+        white-space: nowrap;
+      }
+      .prompt-tag.show { display: block; }
+
+      /* ---------- Touch controls ---------- */
+      .touch-controls {
+        position: absolute;
+        inset: auto 0 0 0;
+        display: none;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 0 12px 12px;
+        z-index: 4;
+        pointer-events: none;
+      }
+      .stage.playing.touch .touch-controls { display: flex; }
+      .tc-group { display: flex; gap: 10px; pointer-events: none; }
+      .tc-btn {
+        pointer-events: auto;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.55);
+        background: rgba(30, 20, 12, 0.5);
+        color: #fff;
+        font-size: 1.35rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+      }
+      .tc-btn.small { width: 52px; height: 52px; font-size: 1rem; }
+      .tc-btn.action {
+        width: 68px; height: 68px;
+        background: rgba(179, 84, 30, 0.78);
+        font-family: "Baloo 2", sans-serif;
+        font-size: 0.82rem;
+        letter-spacing: 0.03em;
+      }
+      .tc-btn.held { background: rgba(217, 164, 65, 0.85); color: #2e2118; }
+
+      .meter-wrap {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        width: min(420px, 70%);
+        display: none;
+        z-index: 4;
+        text-align: center;
+      }
+      .meter-wrap.show { display: block; }
+      .meter-wrap .meter-label {
+        font-family: "Baloo 2", sans-serif;
+        font-weight: 800;
+        color: #fff;
+        text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+      }
+      .meter {
+        height: 16px;
+        border-radius: 999px;
+        background: rgba(20, 14, 10, 0.55);
+        border: 2px solid rgba(255,255,255,0.6);
+        overflow: hidden;
+      }
+      .meter > div {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #57b7d9, #1d6f8e);
+      }
+
+      .footer-note {
+        text-align: center;
+        color: var(--ink-soft);
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="hud">
+        <div class="scene-name"><small id="hud-part">Moses — Escape from Egypt</small><span id="hud-scene">Title</span></div>
+        <div class="spacer"></div>
+        <span class="hud-chip" id="hud-task" title="Scene goal progress">⭐ <span id="hud-task-n">0/0</span></span>
+        <span class="hud-chip" id="hud-hearts" aria-label="Hearts"></span>
+        <span class="hud-chip" title="Score">🏺 <span id="hud-score">0</span></span>
+        <button class="icon-btn" id="btn-sound" aria-label="Sound on or off">🔊</button>
+        <button class="icon-btn" id="btn-pause" aria-label="Pause">⏸</button>
+      </div>
+      <div>
+        <div class="journey-bar"><div id="journey-fill"></div></div>
+        <div class="journey-label" id="journey-label">Scene 1 of 22 — The journey from the Nile to the Red Sea</div>
+      </div>
+      <div class="goal-banner" id="goal-banner"></div>
+
+      <div class="stage" id="stage">
+        <canvas id="game" width="960" height="540"></canvas>
+        <div class="toast" id="toast"></div>
+        <div class="prompt-tag" id="prompt-tag"></div>
+        <div class="meter-wrap" id="meter-wrap">
+          <div class="meter-label" id="meter-label">Hold ACTION — the wind is driving the sea back…</div>
+          <div class="meter"><div id="meter-fill"></div></div>
+        </div>
+        <div class="touch-controls" id="touch-controls">
+          <div class="tc-group">
+            <button class="tc-btn" id="tc-left" aria-label="Move left">◀</button>
+            <button class="tc-btn" id="tc-right" aria-label="Move right">▶</button>
+          </div>
+          <div class="tc-group">
+            <button class="tc-btn small" id="tc-jump" aria-label="Jump">⬆</button>
+            <button class="tc-btn action" id="tc-action" aria-label="Action">ACT</button>
+          </div>
+        </div>
+
+        <!-- Title / scene select -->
+        <div class="overlay show" id="ov-title">
+          <div class="card">
+            <div class="part-label">A TwoRLabs Bible Adventure</div>
+            <h1>Moses — Escape from Egypt</h1>
+            <p>Walk the whole story, from a baby in a basket on the Nile to the walls of water at the Red Sea. Play the scenes in order, or pick any scene below.</p>
+            <div class="howto">
+              <div><b>Move:</b> ← → or A / D</div>
+              <div><b>Jump:</b> ↑, W, or Space</div>
+              <div><b>Action:</b> E or Enter — talk, mark doors, raise the staff</div>
+              <div><b>Touch:</b> on-screen buttons on phone &amp; tablet</div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btn-start">▶ Start the Journey</button>
+              <button class="btn btn-ghost" id="btn-continue" style="display:none">Continue</button>
+            </div>
+            <h2 style="margin-top:20px; font-size:1.15rem;">Pick a scene</h2>
+            <div class="scene-grid" id="scene-grid"></div>
+          </div>
+        </div>
+
+        <!-- Story intro -->
+        <div class="overlay" id="ov-story">
+          <div class="card">
+            <div class="part-label" id="story-part"></div>
+            <h2 id="story-title"></h2>
+            <span class="ref" id="story-ref"></span>
+            <p id="story-text"></p>
+            <p class="goal-line" id="story-goal"></p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btn-play">▶ Play this scene</button>
+              <button class="btn btn-ghost" id="btn-story-back">All scenes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pause -->
+        <div class="overlay" id="ov-pause">
+          <div class="card">
+            <h2>⏸ Paused</h2>
+            <p id="pause-scene"></p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btn-resume">▶ Keep playing</button>
+              <button class="btn btn-ghost" id="btn-restart">↺ Restart scene</button>
+              <button class="btn btn-ghost" id="btn-quit">All scenes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scene complete -->
+        <div class="overlay" id="ov-done">
+          <div class="card">
+            <div class="part-label">Scene complete!</div>
+            <h2 id="done-title"></h2>
+            <p id="done-text"></p>
+            <p id="done-stats" style="font-weight:800"></p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btn-next">Next scene ▶</button>
+              <button class="btn btn-ghost" id="btn-replay">↺ Replay</button>
+              <button class="btn btn-ghost" id="btn-done-scenes">All scenes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Caught / out of hearts -->
+        <div class="overlay" id="ov-fail">
+          <div class="card">
+            <h2 id="fail-title">Oh no!</h2>
+            <p id="fail-text"></p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btn-retry">↺ Try the scene again</button>
+              <button class="btn btn-ghost" id="btn-fail-scenes">All scenes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Victory -->
+        <div class="overlay" id="ov-win">
+          <div class="card">
+            <div class="part-label">The journey is complete</div>
+            <h2>🎵 The Song at the Sea</h2>
+            <p id="win-text"></p>
+            <p id="win-stats" style="font-weight:800"></p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btn-win-again">▶ Play again from Scene 1</button>
+              <button class="btn btn-ghost" id="btn-win-scenes">All scenes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">Exodus 1–15 · Walk right through each scene · ⭐ marks your goal progress · 🏺 is treasure gathered on the way</div>
+    </div>
+
+<script>
+"use strict";
+/* ============================================================
+   Moses — Escape from Egypt
+   A 22-scene horizontal scrolling journey through Exodus 1–15.
+   ============================================================ */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const W = 960, H = 540;
+const GROUND_Y = 452;          // top of the ground band
+const GRAV = 2100;
+const stageEl = document.getElementById("stage");
+
+/* ---------------- Scene data ----------------
+   task types:
+     reach   - just get to the goal gate
+     collect - gather N items, then reach the gate
+     mark    - press ACTION at N glowing spots, then reach the gate
+     hold    - stand at the marked spot and hold ACTION to fill the meter, then reach the gate
+   hazard kinds: guard, frog, gnat, flies, hail, fallen, locust, dark, chase
+--------------------------------------------------- */
+const SCENES = [
+  { part:"Part 1 · Birth and Flight", title:"The Birth of Moses", ref:"Exodus 1:22; 2:1–4",
+    theme:"nile", player:"Jochebed", robe:"#7a4a8c", skin:"#8a5a3b",
+    story:"Pharaoh has ordered every newborn Hebrew boy thrown into the Nile. Jochebed hid her baby for three months — now she has made a little basket boat, coated with tar and pitch, to hide him among the reeds.",
+    goal:"Gather the basket, the tar, and the reeds, then carry baby Moses to the riverbank — but stay out of the Egyptian guards' way!",
+    task:{type:"collect", n:3, label:"Basket supplies", items:["🧺","🪣","🌾"]},
+    len:2600, hazards:[{kind:"guard", x:900, range:180},{kind:"guard", x:1800, range:220}] },
+
+  { part:"Part 1 · Birth and Flight", title:"Drawn from the Water", ref:"Exodus 2:5–10",
+    theme:"nile", player:"Miriam", robe:"#2e7d6e", skin:"#8a5a3b",
+    story:"Pharaoh's daughter has come down to the Nile and found the basket — and she has pity on the crying baby! Miriam watches from the reeds. If she is brave and quick, she can offer to fetch the baby's own mother to nurse him.",
+    goal:"Run along the riverbank and reach Pharaoh's daughter before the basket drifts away. Press ACTION when you reach her!",
+    task:{type:"mark", n:1, label:"Reach the princess", spots:["👑"]},
+    len:2200, hazards:[{kind:"gnat", x:800},{kind:"gnat", x:1500}] },
+
+  { part:"Part 1 · Birth and Flight", title:"Moses Flees Egypt", ref:"Exodus 2:11–15",
+    theme:"desert", player:"Moses", robe:"#3f6212", skin:"#8a5a3b",
+    story:"Moses grew up in Pharaoh's palace. But when he struck down an Egyptian who was beating a Hebrew, Pharaoh heard of it and sought to kill him. Moses must flee across the desert to Midian!",
+    goal:"Run across the desert to Midian. Jump the rocks and cactus, and don't let Pharaoh's chariot catch you!",
+    task:{type:"reach"},
+    len:3000, hazards:[{kind:"fallen", x:700, emoji:"🪨"},{kind:"fallen", x:1300, emoji:"🌵"},{kind:"fallen", x:2000, emoji:"🪨"},{kind:"fallen", x:2500, emoji:"🌵"},{kind:"chase", speed:26}] },
+
+  { part:"Part 2 · The Call", title:"The Burning Bush", ref:"Exodus 3:1–6",
+    theme:"mountain", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Forty years later, Moses tends his father-in-law's flock on Mount Horeb. There — a bush is on fire, yet it does not burn up! And a voice calls: “Moses! Moses! Take off your sandals, for the place where you are standing is holy ground.”",
+    goal:"Climb the mountain path past the sheep and reach the burning bush. Press ACTION at the bush to take off your sandals.",
+    task:{type:"mark", n:1, label:"Reach the bush", spots:["🔥"]},
+    len:2400, hazards:[{kind:"fallen", x:800, emoji:"🐑"},{kind:"fallen", x:1600, emoji:"🐑"}] },
+
+  { part:"Part 2 · The Call", title:"Signs and Return", ref:"Exodus 4:1–31",
+    theme:"desert", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"God gives Moses signs for the people: his staff becomes a snake, and his hand is made leprous and healed again. Aaron comes out to meet him, and together they return to Egypt to speak to the elders of Israel.",
+    goal:"Gather the signs of God — the staff, the snake, and the healed hand — meet Aaron, and reach the elders at Egypt's gate.",
+    task:{type:"collect", n:3, label:"Signs gathered", items:["🦯","🐍","✋"]},
+    len:2700, hazards:[{kind:"fallen", x:1000, emoji:"🪨"},{kind:"fallen", x:1900, emoji:"🪨"}] },
+
+  { part:"Part 3 · Before Pharaoh", title:"“Let My People Go!”", ref:"Exodus 5–6",
+    theme:"palace", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Moses and Aaron stand before Pharaoh: “This is what the LORD says: Let my people go!” But Pharaoh's heart is hard. “Who is the LORD, that I should obey him?” He makes the slaves' work harder — the same bricks, but no straw!",
+    goal:"Cross the palace hall, speak to Pharaoh three times (press ACTION at the throne), then leave by the far gate. Dodge the brick piles the guards drop!",
+    task:{type:"mark", n:3, label:"Words to Pharaoh", spots:["👑","👑","👑"]},
+    len:2500, hazards:[{kind:"hail", emoji:"🧱", rate:0.55},{kind:"guard", x:1200, range:150}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 1 · Water to Blood", ref:"Exodus 7:14–25",
+    theme:"nileblood", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Pharaoh still refuses. So Aaron lifts his staff over the Nile and strikes the water — and all the water of Egypt turns to blood. The fish die, and the river stinks, yet Pharaoh's heart stays hard.",
+    goal:"Walk the riverbank and strike the water with the staff at the three glowing spots (press ACTION).",
+    task:{type:"mark", n:3, label:"Strikes on the Nile", spots:["〰️","〰️","〰️"]},
+    len:2500, hazards:[{kind:"gnat", x:1100},{kind:"gnat", x:1900}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 2 · Frogs", ref:"Exodus 8:1–15",
+    theme:"nile", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Aaron stretches his hand over the waters, and frogs come up and cover the land of Egypt — into the houses, the bedrooms, even the ovens and kneading troughs! Frogs everywhere!",
+    goal:"Hop your way through the frog invasion to Pharaoh's house. Don't land on a frog — jump over them!",
+    task:{type:"reach"},
+    len:2600, hazards:[{kind:"frog", x:600},{kind:"frog", x:1000},{kind:"frog", x:1450},{kind:"frog", x:1900},{kind:"frog", x:2300}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 3 · Gnats", ref:"Exodus 8:16–19",
+    theme:"desert", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Aaron strikes the dust of the ground, and all the dust becomes gnats — on people and animals throughout Egypt. Even Pharaoh's magicians say, “This is the finger of God.”",
+    goal:"Cross the dusty plain to the magicians' tent. Steer clear of the swirling gnat clouds!",
+    task:{type:"reach"},
+    len:2400, hazards:[{kind:"gnat", x:650},{kind:"gnat", x:1150},{kind:"gnat", x:1650},{kind:"gnat", x:2050}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 4 · Flies", ref:"Exodus 8:20–32",
+    theme:"palace", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Thick swarms of flies pour into Pharaoh's palace and ruin the whole land — but God makes a difference: in Goshen, where His people live, there are no flies at all.",
+    goal:"Outrun the fly swarms and reach the safety of Goshen, where no flies can follow!",
+    task:{type:"reach"},
+    len:2600, hazards:[{kind:"flies", x:900},{kind:"flies", x:1600},{kind:"flies", x:2200}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 5 · Livestock", ref:"Exodus 9:1–7",
+    theme:"fields", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"A terrible plague strikes the livestock of Egypt — horses, donkeys, camels, cattle, sheep and goats. But of the livestock of Israel, not one animal dies. Pharaoh sends men to see — and it is just as God said.",
+    goal:"Lead Israel's three sheep safely through the fields to the fold. Jump over anything in the path!",
+    task:{type:"collect", n:3, label:"Sheep brought in", items:["🐑","🐑","🐑"]},
+    len:2600, hazards:[{kind:"fallen", x:850, emoji:"🪨"},{kind:"fallen", x:1500, emoji:"🪵"},{kind:"fallen", x:2100, emoji:"🪨"}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 6 · Boils", ref:"Exodus 9:8–12",
+    theme:"fields", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Moses takes handfuls of soot from a furnace and throws it into the air before Pharaoh. It becomes fine dust over all Egypt, and festering boils break out on people and animals.",
+    goal:"Visit the three furnaces and throw the soot skyward at each one (press ACTION).",
+    task:{type:"mark", n:3, label:"Furnaces visited", spots:["🔥","🔥","🔥"]},
+    len:2500, hazards:[{kind:"gnat", x:1000},{kind:"gnat", x:1800}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 7 · Hail", ref:"Exodus 9:13–35",
+    theme:"storm", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Thunder rolls and the worst hailstorm in Egypt's history crashes down — hail and lightning together, striking people, animals and crops. But everyone who shelters indoors is spared.",
+    goal:"Run for the shelter house at the far side — and dodge the falling hailstones!",
+    task:{type:"reach"},
+    len:2700, hazards:[{kind:"hail", emoji:"🧊", rate:0.8},{kind:"fallen", x:1200, emoji:"🌳"}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 8 · Locusts", ref:"Exodus 10:1–20",
+    theme:"fields", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"An east wind brings locusts — so many they cover the face of the ground and darken the sky. They eat everything the hail left: every plant, every fruit, until nothing green remains in Egypt.",
+    goal:"Push through the locust wind to the far fields. The wind will shove you — keep running and jump the crop rows!",
+    task:{type:"reach"}, wind:-60,
+    len:2700, hazards:[{kind:"locust", x:800},{kind:"locust", x:1500},{kind:"locust", x:2100},{kind:"fallen", x:1150, emoji:"🌾"}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 9 · Darkness", ref:"Exodus 10:21–29",
+    theme:"dark", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Then comes a darkness that can be felt — three days of darkness over all Egypt. No one can see anyone else or leave their place. But the Israelites have light where they live, in Goshen.",
+    goal:"Feel your way through the darkness toward the light of Goshen. Your lamp shows only a little way — walk carefully!",
+    task:{type:"reach"}, dark:true,
+    len:2400, hazards:[{kind:"fallen", x:700, emoji:"🪨"},{kind:"fallen", x:1250, emoji:"🪨"},{kind:"fallen", x:1800, emoji:"🪨"}] },
+
+  { part:"Part 4 · The Ten Plagues", title:"Plague 10 · The Passover", ref:"Exodus 11–12:30",
+    theme:"night", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"At midnight the LORD will pass through Egypt, and the firstborn will die — but the houses marked with the lamb's blood on their doorposts He will pass over. “When I see the blood, I will pass over you.”",
+    goal:"Mark the three Israelite doors with the lamb's blood (press ACTION at each glowing door), then get home before midnight!",
+    task:{type:"mark", n:3, label:"Doors marked", spots:["🚪","🚪","🚪"]},
+    len:2600, hazards:[{kind:"guard", x:1700, range:130}] },
+
+  { part:"Part 5 · Leaving Egypt", title:"The Exodus Begins", ref:"Exodus 12:31–42; 13:17–22",
+    theme:"night", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"That very night Pharaoh sends Israel away at last! The people leave in haste, dough unleavened, carrying silver and gold — and God leads them: a pillar of cloud by day, and a pillar of fire by night.",
+    goal:"Gather three bundles of unleavened bread for the journey, follow the pillar of fire, and lead the people out of Egypt!",
+    task:{type:"collect", n:3, label:"Bread bundles", items:["🫓","🫓","🫓"]},
+    len:2900, hazards:[{kind:"fallen", x:1100, emoji:"🪨"},{kind:"fallen", x:2000, emoji:"🪨"}] },
+
+  { part:"Part 5 · Leaving Egypt", title:"Trapped at the Sea", ref:"Exodus 14:1–12",
+    theme:"shore", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Israel camps by the Red Sea — but Pharaoh has changed his mind! Six hundred chariots thunder after them. The sea is in front, the army behind, and the people cry out in fear. Moses says: “Do not be afraid. Stand firm and you will see the deliverance of the LORD.”",
+    goal:"Race along the shore to Moses' lookout rock while Pharaoh's chariots close in behind you!",
+    task:{type:"reach"},
+    len:2800, hazards:[{kind:"chase", speed:34},{kind:"fallen", x:1200, emoji:"🪨"},{kind:"fallen", x:2100, emoji:"🪨"}] },
+
+  { part:"Part 6 · The Red Sea", title:"The Sea Parts", ref:"Exodus 14:13–22",
+    theme:"shore", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Moses stretches out his hand over the sea, and all night a strong east wind drives the waters back. The sea becomes dry land — the waters a wall on the right and on the left!",
+    goal:"Stand on the rock, raise your staff, and HOLD the ACTION button to drive the sea back. Fill the wind meter!",
+    task:{type:"hold", holdTime:5, label:"The sea is parting…"},
+    len:1500, hazards:[] },
+
+  { part:"Part 6 · The Red Sea", title:"Crossing on Dry Ground", ref:"Exodus 14:22–25",
+    theme:"sea", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Israel walks through the sea on dry ground, walls of water towering on both sides! Behind them the Egyptians follow in — but their chariot wheels jam and clog in the deep.",
+    goal:"Lead Israel across the dry sea floor between the walls of water. Watch for puddles that slow you down — and keep ahead of the chariots!",
+    task:{type:"reach"},
+    len:3200, hazards:[{kind:"chase", speed:30}] },
+
+  { part:"Part 6 · The Red Sea", title:"The Waters Return", ref:"Exodus 14:26–31",
+    theme:"sea", player:"Moses", robe:"#78552c", skin:"#8a5a3b",
+    story:"Israel is safe on the far shore. Now God says: “Stretch out your hand over the sea, so the waters flow back.” Moses obeys — and the sea returns to its place, covering Pharaoh's whole army. Not one of them survived.",
+    goal:"Run! Reach the far shore before the returning waters catch you!",
+    task:{type:"reach"},
+    len:3000, hazards:[{kind:"chase", speed:52, water:true}] },
+
+  { part:"Part 6 · The Red Sea", title:"The Song", ref:"Exodus 15:1–21",
+    theme:"shore", player:"Miriam", robe:"#a03d63", skin:"#8a5a3b",
+    story:"Safe at last! Moses and the Israelites sing to the LORD: “I will sing to the LORD, for he is highly exalted!” And Miriam the prophetess takes a tambourine, and all the women follow her, dancing and singing.",
+    goal:"Celebrate! Gather the eight music notes floating over the shore to complete the Song of the Sea.",
+    task:{type:"collect", n:8, label:"Notes of the song", items:["🎵","🎶","🎵","🎶","🎵","🎶","🎵","🎶"]},
+    len:2400, hazards:[] }
+];
+
+/* ---------------- Themes ---------------- */
+const THEMES = {
+  nile:      { sky:["#8ec9e8","#d8f0fb"], far:"#b7d99a", ground:"#c9a45c", groundTop:"#7fae4c", water:"#2e8fb5" },
+  nileblood: { sky:["#c98d7a","#ecd3b8"], far:"#b7a06a", ground:"#c9a45c", groundTop:"#8a7a3c", water:"#a52a1e" },
+  desert:    { sky:["#f2c063","#fbe8bd"], far:"#e3b96e", ground:"#e0b96a", groundTop:"#d9a84e", water:null },
+  mountain:  { sky:["#a8c6e8","#e8f2fb"], far:"#8d9db5", ground:"#9b8b74", groundTop:"#7c6c55", water:null },
+  palace:    { sky:["#f7d774","#fdf0c0"], far:"#e8c97a", ground:"#e6cf8f", groundTop:"#cbb26a", water:null },
+  fields:    { sky:["#8ec9e8","#eaf7e0"], far:"#a8cf8a", ground:"#b99b58", groundTop:"#79a84b", water:null },
+  storm:     { sky:["#5d7086","#93a7ba"], far:"#6d7f92", ground:"#8a7a58", groundTop:"#5f7350", water:null },
+  dark:      { sky:["#10131f","#1d2438"], far:"#232a3d", ground:"#3a3f52", groundTop:"#2c3040", water:null },
+  night:     { sky:["#1c2b52","#3a4a7a"], far:"#2c3a5e", ground:"#8a744e", groundTop:"#5f5138", water:null },
+  shore:     { sky:["#8ec9e8","#fdf3d0"], far:"#c9d99a", ground:"#e3cf96", groundTop:"#c9b878", water:"#2e8fb5" },
+  sea:       { sky:["#7fb8d9","#d8f0fb"], far:"#5d9dbd", ground:"#d9c491", groundTop:"#c2ab72", water:"#1d6f8e" }
+};
+/* engine continues below */
+
+/* ---------------- Audio (tiny synth) ---------------- */
+let audioCtx = null, soundOn = true;
+function beep(freq, dur, type, vol, slideTo) {
+  if (!soundOn) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type || "sine";
+    o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(vol || 0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t); o.stop(t + dur);
+  } catch (e) { /* no audio — fine */ }
+}
+const sfx = {
+  jump:  () => beep(330, 0.14, "square", 0.06, 560),
+  pickup:() => { beep(660, 0.1, "sine", 0.12); setTimeout(() => beep(880, 0.14, "sine", 0.12), 70); },
+  mark:  () => { beep(520, 0.12, "triangle", 0.14); setTimeout(() => beep(780, 0.16, "triangle", 0.14), 90); },
+  hit:   () => beep(180, 0.25, "sawtooth", 0.12, 90),
+  win:   () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.22, "triangle", 0.13), i * 120)),
+  splash:() => beep(240, 0.3, "sine", 0.1, 110)
+};
+
+/* ---------------- Game state ---------------- */
+const G = {
+  mode: "title",            // title | story | play | pause | done | fail | win
+  sceneIdx: 0,
+  score: 0,
+  totalTime: 0,
+  sceneTime: 0,
+  completed: new Set(),
+  camX: 0,
+  time: 0
+};
+const player = {
+  x: 80, y: GROUND_Y - 64, w: 34, h: 64,
+  vx: 0, vy: 0, face: 1, onGround: true,
+  hearts: 3, invuln: 0, walkPhase: 0,
+  safeX: 80, safeY: GROUND_Y - 64, safeTimer: 0
+};
+let level = null;   // live scene instance
+
+function buildLevel(idx) {
+  const s = SCENES[idx];
+  const L = {
+    def: s, len: s.len, items: [], spots: [], hazards: [],
+    taskDone: 0, taskNeed: 0, holdT: 0,
+    gateX: s.len - 130, chaseX: -500, wind: s.wind || 0,
+    hailDrops: [], particles: [], floaters: [],
+    finished: false
+  };
+  const t = s.task;
+  if (t.type === "collect") {
+    L.taskNeed = t.n;
+    for (let i = 0; i < t.n; i++) {
+      const fx = 500 + (s.len - 800) * (t.n === 1 ? 0.5 : i / (t.n - 1)) + (i % 2 ? 60 : -40);
+      L.items.push({ x: fx, y: GROUND_Y - 120 - (i % 3) * 55, emoji: t.items[i % t.items.length], got: false, bob: Math.random() * 6 });
+    }
+  }
+  if (t.type === "mark") {
+    L.taskNeed = t.n;
+    for (let i = 0; i < t.n; i++) {
+      const fx = t.n === 1 ? s.len - 480 : 600 + (s.len - 1000) * (i / (t.n - 1));
+      L.spots.push({ x: fx, emoji: t.spots[i % t.spots.length], done: false });
+    }
+  }
+  if (t.type === "hold") L.taskNeed = 1;
+  (s.hazards || []).forEach(h => {
+    const hz = Object.assign({}, h);
+    if (hz.kind === "guard") { hz.dir = 1; hz.cx = hz.x; }
+    if (hz.kind === "frog") { hz.phase = Math.random() * 6; hz.cx = hz.x; }
+    if (hz.kind === "flies" || hz.kind === "locust") { hz.cx = hz.x; hz.cy = GROUND_Y - 130 - Math.random() * 70; hz.phase = Math.random() * 6; }
+    if (hz.kind === "chase") { L.chaseSpeed = hz.speed; L.chaseWater = !!hz.water; L.chaseX = -420; }
+    L.hazards.push(hz);
+  });
+  // ambient sparkles / notes
+  for (let i = 0; i < 26; i++) L.floaters.push({ x: Math.random() * s.len, y: 60 + Math.random() * 300, p: Math.random() * 6.28, s: 0.4 + Math.random() * 0.8 });
+  return L;
+}
+
+function resetPlayer() {
+  player.x = 80; player.y = GROUND_Y - player.h;
+  player.vx = 0; player.vy = 0; player.face = 1;
+  player.hearts = 3; player.invuln = 0;
+  player.safeX = 80; player.safeY = player.y;
+  G.camX = 0;
+}
+
+/* ---------------- Input ---------------- */
+const keys = {};
+let actionHeld = false, actionPressed = false;
+window.addEventListener("keydown", e => {
+  if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space"].includes(e.code)) e.preventDefault();
+  if (e.repeat) return;
+  keys[e.code] = true;
+  if (e.code === "KeyE" || e.code === "Enter") { actionHeld = true; actionPressed = true; }
+  if (e.code === "KeyP" || e.code === "Escape") togglePause();
+});
+window.addEventListener("keyup", e => {
+  keys[e.code] = false;
+  if (e.code === "KeyE" || e.code === "Enter") actionHeld = false;
+});
+function bindHold(id, on, off) {
+  const el = document.getElementById(id);
+  const start = e => { e.preventDefault(); el.classList.add("held"); on(); };
+  const end = e => { e.preventDefault(); el.classList.remove("held"); if (off) off(); };
+  el.addEventListener("pointerdown", start);
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointerleave", end);
+  el.addEventListener("pointercancel", end);
+  el.addEventListener("contextmenu", e => e.preventDefault());
+}
+bindHold("tc-left",  () => keys.ArrowLeft = true,  () => keys.ArrowLeft = false);
+bindHold("tc-right", () => keys.ArrowRight = true, () => keys.ArrowRight = false);
+bindHold("tc-jump",  () => keys.ArrowUp = true,    () => keys.ArrowUp = false);
+bindHold("tc-action",() => { actionHeld = true; actionPressed = true; }, () => actionHeld = false);
+if (window.matchMedia("(pointer: coarse)").matches) stageEl.classList.add("touch");
+stageEl.addEventListener("touchstart", () => stageEl.classList.add("touch"), { passive: true });
+
+/* ---------------- UI helpers ---------------- */
+const $ = id => document.getElementById(id);
+const overlays = ["ov-title","ov-story","ov-pause","ov-done","ov-fail","ov-win"];
+function showOverlay(id) {
+  overlays.forEach(o => $(o).classList.toggle("show", o === id));
+  stageEl.classList.toggle("playing", !id && G.mode === "play");
+  if (id) { $("prompt-tag").classList.remove("show"); $("meter-wrap").classList.remove("show"); }
+}
+let toastTimer = null;
+function toast(msg, ms) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), ms || 2200);
+}
+function updateHUD() {
+  const s = SCENES[G.sceneIdx];
+  $("hud-part").textContent = s.part;
+  $("hud-scene").textContent = "Scene " + (G.sceneIdx + 1) + " · " + s.title;
+  let hearts = "";
+  for (let i = 0; i < 3; i++) hearts += '<span class="heart' + (i < player.hearts ? "" : " lost") + '">♥</span>';
+  $("hud-hearts").innerHTML = hearts;
+  $("hud-score").textContent = G.score;
+  $("hud-task-n").textContent = level ? (level.taskDone + "/" + Math.max(level.taskNeed, 0)) : "0/0";
+  $("hud-task").style.display = level && level.taskNeed > 0 ? "" : "none";
+  $("journey-fill").style.width = (G.completed.size / SCENES.length * 100) + "%";
+  $("journey-label").textContent = "Scene " + (G.sceneIdx + 1) + " of 22 · " + G.completed.size + " of 22 scenes finished";
+}
+function buildSceneGrid() {
+  const grid = $("scene-grid");
+  grid.innerHTML = "";
+  SCENES.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.className = "scene-pick" + (G.completed.has(i) ? " done" : "");
+    b.innerHTML = '<span class="n">Scene ' + (i + 1) + ' · ' + s.ref + '</span>' + s.title;
+    b.addEventListener("click", () => openStory(i));
+    grid.appendChild(b);
+  });
+}
+
+/* ---------------- Flow ---------------- */
+function openStory(idx) {
+  G.sceneIdx = idx;
+  const s = SCENES[idx];
+  G.mode = "story";
+  $("story-part").textContent = s.part + " · Scene " + (idx + 1) + " of 22";
+  $("story-title").textContent = s.title;
+  $("story-ref").textContent = s.ref;
+  $("story-text").textContent = s.story;
+  $("story-goal").innerHTML = "🎯 <b>Your mission:</b> " + s.goal;
+  showOverlay("ov-story");
+  updateHUD();
+}
+function startScene(idx) {
+  G.sceneIdx = idx;
+  level = buildLevel(idx);
+  resetPlayer();
+  G.sceneTime = 0;
+  G.mode = "play";
+  showOverlay(null);
+  $("goal-banner").innerHTML = "🎯 <b>Mission:</b> " + SCENES[idx].goal;
+  $("goal-banner").classList.add("show");
+  updateHUD();
+  toast("Scene " + (idx + 1) + " — " + SCENES[idx].title, 2000);
+}
+function completeScene() {
+  if (!level || level.finished) return;
+  level.finished = true;
+  G.completed.add(G.sceneIdx);
+  G.score += 100 + player.hearts * 25;
+  sfx.win();
+  burst(player.x + 17, player.y, "#d9a441", 26);
+  const s = SCENES[G.sceneIdx];
+  if (G.sceneIdx === SCENES.length - 1) {
+    G.mode = "win";
+    $("win-text").textContent = "“I will sing to the LORD, for he is highly exalted. The LORD is my strength and my defense; he has become my salvation.” — Exodus 15:1–2. You walked the whole journey: from a basket on the Nile, through the plagues and the night of Passover, to dry ground in the middle of the sea!";
+    $("win-stats").textContent = "Final score 🏺 " + G.score + " · Journey time " + fmtTime(G.totalTime);
+    showOverlay("ov-win");
+  } else {
+    G.mode = "done";
+    $("done-title").textContent = s.title + " ✓";
+    $("done-text").textContent = doneLine(G.sceneIdx);
+    $("done-stats").textContent = "Score 🏺 " + G.score + " · Scene time " + fmtTime(G.sceneTime) + " · Next: Scene " + (G.sceneIdx + 2) + " — " + SCENES[G.sceneIdx + 1].title;
+    showOverlay("ov-done");
+  }
+  buildSceneGrid();
+  updateHUD();
+}
+function failScene(reason) {
+  G.mode = "fail";
+  $("fail-title").textContent = "Out of hearts!";
+  $("fail-text").textContent = reason + " Don't worry — even Moses had to try more than once with Pharaoh. Jump back in!";
+  showOverlay("ov-fail");
+}
+function doneLine(i) {
+  const lines = [
+    "The basket is hidden among the reeds, and Miriam keeps watch. God is already at work.",
+    "The princess names him Moses — “because I drew him out of the water.” He will grow up in the palace.",
+    "Moses reaches Midian safely and sits down by a well. Forty years of shepherding lie ahead.",
+    "From the bush God says: “I have indeed seen the misery of my people... So now, go. I am sending you to Pharaoh.”",
+    "Aaron speaks, the elders believe, and they bow down and worship. The mission has begun.",
+    "Pharaoh hardens his heart — but God says, “By now I could have... but I have raised you up for this very purpose.”",
+    "The Nile is blood, the fish are dead — and still Pharaoh will not listen.",
+    "Pharaoh begs Moses to pray the frogs away... then hardens his heart again once they're gone.",
+    "“This is the finger of God,” say the magicians. Pharaoh still says no.",
+    "Goshen stays fly-free. God is making a difference between His people and Egypt.",
+    "Pharaoh's own servants check the fields: not one Israelite animal has died. Just as God said.",
+    "Boils on every Egyptian — even the magicians cannot stand before Moses. Still Pharaoh refuses.",
+    "Some Egyptians now fear the word of the LORD and shelter their servants. God's word is being proven true.",
+    "Nothing green is left in Egypt. Pharaoh offers deals and bargains — but God's people must go free, all of them.",
+    "Three days of darkness — but Goshen is full of light. The last night is coming.",
+    "Every marked door is passed over. Israel is safe under the blood of the lamb.",
+    "Six hundred thousand people march out of Egypt in the night. Four hundred and thirty years of slavery — over!",
+    "“Do not be afraid. Stand firm and you will see the deliverance the LORD will bring you today.”",
+    "The wind blows all night, the waters pile up in walls — a road appears where the sea used to be!",
+    "Dry ground, in the middle of the sea! Israel is crossing over, just as God promised.",
+    "The sea returns to its place. Israel sees the great power of the LORD — and they trust in Him and in Moses.",
+    "“The LORD reigns for ever and ever!” Miriam and the women dance with tambourines. 🎵"
+  ];
+  return lines[i] || "";
+}
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return m + ":" + String(s).padStart(2, "0");
+}
+function togglePause() {
+  if (G.mode === "play") {
+    G.mode = "pause";
+    $("pause-scene").textContent = "Scene " + (G.sceneIdx + 1) + " · " + SCENES[G.sceneIdx].title + " — take a breather.";
+    showOverlay("ov-pause");
+  } else if (G.mode === "pause") {
+    G.mode = "play";
+    showOverlay(null);
+  }
+}
+function goTitle() {
+  G.mode = "title";
+  $("goal-banner").classList.remove("show");
+  buildSceneGrid();
+  const next = nextUnfinished();
+  $("btn-continue").style.display = G.completed.size > 0 && G.completed.size < SCENES.length ? "" : "none";
+  $("btn-continue").textContent = "Continue · Scene " + (next + 1);
+  showOverlay("ov-title");
+  level = level || buildLevel(0);
+  updateHUD();
+}
+function nextUnfinished() {
+  for (let i = 0; i < SCENES.length; i++) if (!G.completed.has(i)) return i;
+  return 0;
+}
+
+/* buttons */
+$("btn-start").addEventListener("click", () => openStory(0));
+$("btn-continue").addEventListener("click", () => openStory(nextUnfinished()));
+$("btn-play").addEventListener("click", () => startScene(G.sceneIdx));
+$("btn-story-back").addEventListener("click", goTitle);
+$("btn-pause").addEventListener("click", () => { if (G.mode === "play" || G.mode === "pause") togglePause(); });
+$("btn-resume").addEventListener("click", togglePause);
+$("btn-restart").addEventListener("click", () => startScene(G.sceneIdx));
+$("btn-quit").addEventListener("click", goTitle);
+$("btn-next").addEventListener("click", () => openStory(Math.min(G.sceneIdx + 1, SCENES.length - 1)));
+$("btn-replay").addEventListener("click", () => startScene(G.sceneIdx));
+$("btn-done-scenes").addEventListener("click", goTitle);
+$("btn-retry").addEventListener("click", () => startScene(G.sceneIdx));
+$("btn-fail-scenes").addEventListener("click", goTitle);
+$("btn-win-again").addEventListener("click", () => { G.completed.clear(); G.score = 0; openStory(0); });
+$("btn-win-scenes").addEventListener("click", goTitle);
+$("btn-sound").addEventListener("click", () => {
+  soundOn = !soundOn;
+  $("btn-sound").textContent = soundOn ? "🔊" : "🔇";
+  if (soundOn) sfx.pickup();
+});
+
+/* ---------------- Particles ---------------- */
+function burst(x, y, color, n) {
+  if (!level) return;
+  for (let i = 0; i < n; i++) {
+    level.particles.push({
+      x, y, vx: (Math.random() - 0.5) * 340, vy: -Math.random() * 320 - 60,
+      life: 0.7 + Math.random() * 0.5, max: 1.2, color, r: 2 + Math.random() * 3.5
+    });
+  }
+}
+
+/* ---------------- Damage ---------------- */
+function hurt(reason) {
+  if (player.invuln > 0 || G.mode !== "play") return;
+  player.hearts--;
+  sfx.hit();
+  burst(player.x + 17, player.y + 30, "#b3372c", 14);
+  updateHUD();
+  if (player.hearts <= 0) { failScene(reason); return; }
+  toast("Ouch! " + reason, 1500);
+  player.x = Math.max(40, player.safeX);
+  player.y = player.safeY;
+  player.vx = 0; player.vy = 0;
+  player.invuln = 1.6;
+}
+
+/* ---------------- Update ---------------- */
+function update(dt) {
+  G.time += dt;
+  if (!level) return;
+
+  // particles & ambient always drift (also behind menus, looks alive)
+  level.particles = level.particles.filter(p => (p.life -= dt) > 0);
+  level.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; });
+
+  if (G.mode !== "play") return;
+  G.sceneTime += dt;
+  G.totalTime += dt;
+  const s = level.def;
+
+  /* --- player movement --- */
+  const SPEED = 335;
+  let move = 0;
+  if (keys.ArrowLeft || keys.KeyA) move -= 1;
+  if (keys.ArrowRight || keys.KeyD) move += 1;
+  player.vx = move * SPEED + level.wind;
+  if (move !== 0) { player.face = move; player.walkPhase += dt * 11; }
+  const wantJump = keys.ArrowUp || keys.KeyW || keys.Space;
+  if (wantJump && player.onGround) {
+    player.vy = -840; player.onGround = false; sfx.jump();
+  }
+  player.vy += GRAV * dt;
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
+  if (player.y >= GROUND_Y - player.h) {
+    if (!player.onGround && player.vy > 500) burst(player.x + 17, GROUND_Y, "#cbb27a", 5);
+    player.y = GROUND_Y - player.h; player.vy = 0; player.onGround = true;
+  }
+  player.x = Math.max(16, Math.min(player.x, level.len - 60));
+  if (player.invuln > 0) player.invuln -= dt;
+
+  // remember safe ground spot
+  player.safeTimer += dt;
+  if (player.onGround && player.safeTimer > 0.8) {
+    player.safeTimer = 0; player.safeX = player.x; player.safeY = player.y;
+  }
+
+  /* --- camera --- */
+  const targetCam = player.x + player.w / 2 - W / 2;
+  G.camX += (Math.max(0, Math.min(targetCam, level.len - W)) - G.camX) * Math.min(1, dt * 7);
+
+  /* --- chase pressure --- */
+  if (level.chaseSpeed) {
+    // gentle rubber-banding: the pursuit keeps pressure on without being unfair
+    const gap = player.x - level.chaseX;
+    const effSpeed = level.chaseSpeed + Math.max(0, gap - 520) * 0.10;
+    level.chaseX += effSpeed * dt;
+    if (player.x - level.chaseX < 26) hurt(level.chaseWater ? "The waters are closing in!" : "Pharaoh's chariots caught you!");
+  }
+
+  /* --- hazards --- */
+  for (const hz of level.hazards) {
+    if (hz.kind === "guard") {
+      hz.x += hz.dir * 62 * dt;
+      if (Math.abs(hz.x - hz.cx) > hz.range) hz.dir *= -1;
+      if (overlap(player.x, player.y, player.w, player.h, hz.x - 20, GROUND_Y - 66, 40, 66)) hurt("A guard spotted you!");
+    }
+    if (hz.kind === "frog") {
+      const hop = Math.abs(Math.sin(G.time * 2.4 + hz.phase));
+      hz.fx = hz.cx + Math.sin(G.time * 0.7 + hz.phase) * 46;
+      hz.fy = GROUND_Y - 26 - hop * 34;
+      if (overlap(player.x, player.y, player.w, player.h, hz.fx - 18, hz.fy - 8, 36, 30)) hurt("You landed on a frog!");
+    }
+    if (hz.kind === "gnat") {
+      // forgiving hitbox: a good jump clears the top of the cloud
+      if (overlap(player.x, player.y, player.w, player.h, hz.x - 40, GROUND_Y - 84, 80, 84)) hurt("The gnat cloud got you!");
+    }
+    if (hz.kind === "flies" || hz.kind === "locust") {
+      const dx = player.x - hz.cx, dy = (player.y + 20) - hz.cy;
+      const d = Math.hypot(dx, dy) || 1;
+      const sp = hz.kind === "flies" ? 66 : 46;
+      if (d < 330) { hz.cx += dx / d * sp * dt; hz.cy += dy / d * sp * dt; }
+      hz.cx += Math.sin(G.time * 3 + hz.phase) * 22 * dt;
+      if (overlap(player.x, player.y, player.w, player.h, hz.cx - 30, hz.cy - 24, 60, 48)) hurt(hz.kind === "flies" ? "The fly swarm engulfed you!" : "The locust cloud overwhelmed you!");
+    }
+    if (hz.kind === "fallen") {
+      if (overlap(player.x, player.y, player.w, player.h, hz.x - 24, GROUND_Y - 34, 48, 34)) hurt("You tripped! Jump over obstacles.");
+    }
+    if (hz.kind === "hail") {
+      if (Math.random() < hz.rate * dt * 1.6) {
+        level.hailDrops.push({ x: G.camX + Math.random() * W, y: -20, vy: 520 + Math.random() * 160, emoji: hz.emoji });
+      }
+    }
+  }
+  level.hailDrops = level.hailDrops.filter(d => d.y < GROUND_Y + 10);
+  for (const d of level.hailDrops) {
+    d.y += d.vy * dt;
+    if (overlap(player.x, player.y, player.w, player.h, d.x - 11, d.y - 11, 22, 22)) { d.y = 9999; hurt(level.def.theme === "palace" ? "A brick bonked you!" : "A hailstone bonked you!"); }
+  }
+
+  /* --- collect items --- */
+  for (const it of level.items) {
+    if (it.got) continue;
+    if (overlap(player.x, player.y, player.w, player.h, it.x - 22, it.y - 22, 44, 44)) {
+      it.got = true;
+      level.taskDone++;
+      G.score += 25;
+      sfx.pickup();
+      burst(it.x, it.y, "#d9a441", 12);
+      toast(taskProgressText(), 1300);
+      updateHUD();
+    }
+  }
+
+  /* --- mark spots / action --- */
+  let nearSpot = null;
+  for (const sp of level.spots) if (!sp.done && Math.abs(player.x + 17 - sp.x) < 58 && player.onGround) nearSpot = sp;
+  const holdSpot = s.task.type === "hold" && level.taskDone === 0 ? level.gateX - 260 : null;
+  const promptEl = $("prompt-tag");
+  if (nearSpot) {
+    promptEl.textContent = isTouch() ? "Tap ACT here!" : "Press E here!";
+    promptEl.classList.add("show");
+  } else if (holdSpot !== null && Math.abs(player.x + 17 - holdSpot) < 70) {
+    promptEl.textContent = isTouch() ? "Hold ACT — raise the staff!" : "Hold E — raise the staff!";
+    promptEl.classList.add("show");
+  } else promptEl.classList.remove("show");
+
+  if (actionPressed && nearSpot) {
+    nearSpot.done = true;
+    level.taskDone++;
+    G.score += 40;
+    sfx.mark();
+    burst(nearSpot.x, GROUND_Y - 90, "#7fb069", 16);
+    toast(taskProgressText(), 1400);
+    updateHUD();
+  }
+
+  /* --- hold task (sea parts) --- */
+  const meter = $("meter-wrap");
+  if (s.task.type === "hold" && level.taskDone === 0) {
+    const atSpot = holdSpot !== null && Math.abs(player.x + 17 - holdSpot) < 70;
+    meter.classList.toggle("show", atSpot || level.holdT > 0);
+    if (atSpot && actionHeld) {
+      level.holdT += dt;
+      if (Math.random() < dt * 8) sfx.splash();
+      if (level.holdT >= s.task.holdTime) {
+        level.taskDone = 1;
+        G.score += 60;
+        sfx.win();
+        burst(player.x + 60, player.y, "#57b7d9", 30);
+        toast("The sea is driven back — walls of water! 🌊", 2400);
+        meter.classList.remove("show");
+        updateHUD();
+      }
+    } else if (level.holdT > 0) {
+      level.holdT = Math.max(0, level.holdT - dt * 0.6);
+    }
+    $("meter-fill").style.width = (level.holdT / s.task.holdTime * 100) + "%";
+  } else meter.classList.remove("show");
+
+  actionPressed = false;
+
+  /* --- goal gate --- */
+  if (player.x + player.w >= level.gateX) {
+    if (level.taskNeed === 0 || level.taskDone >= level.taskNeed) completeScene();
+    else {
+      player.x = level.gateX - player.w - 2;
+      if (!level.gateWarned || G.time - level.gateWarned > 2.5) {
+        level.gateWarned = G.time;
+        toast("Not yet! " + taskProgressText(true), 1800);
+        beep(220, 0.15, "square", 0.08);
+      }
+    }
+  }
+}
+function taskProgressText(needHow) {
+  if (!level) return "";
+  const t = level.def.task;
+  const label = t.label || "Goal";
+  if (level.taskDone >= level.taskNeed && level.taskNeed > 0) return label + " complete! Head for the glowing gate ▶";
+  return label + ": " + level.taskDone + " of " + level.taskNeed + (needHow ? " — finish the mission first!" : "");
+}
+function overlap(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+function isTouch() { return stageEl.classList.contains("touch"); }
+
+/* ---------------- Drawing ---------------- */
+function draw() {
+  if (!level) return;
+  const s = level.def, th = THEMES[s.theme];
+  ctx.clearRect(0, 0, W, H);
+
+  // sky
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, th.sky[0]); grad.addColorStop(1, th.sky[1]);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  const darkScene = s.theme === "dark" || s.theme === "night";
+  // sun / moon
+  ctx.fillStyle = darkScene ? "#e8e4d2" : "#ffd94d";
+  ctx.beginPath(); ctx.arc(W - 130, 78, darkScene ? 26 : 36, 0, 6.29); ctx.fill();
+  if (!darkScene) { ctx.fillStyle = "rgba(255,217,77,0.25)"; ctx.beginPath(); ctx.arc(W - 130, 78, 54, 0, 6.29); ctx.fill(); }
+  if (darkScene) {
+    ctx.fillStyle = "#fff";
+    for (let i = 0; i < 40; i++) {
+      const sx = (i * 173 + 40) % W, sy = (i * 97) % 170 + 12;
+      ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(G.time + i));
+      ctx.fillRect(sx, sy, 2.4, 2.4);
+    }
+    ctx.globalAlpha = 1;
+  }
+  // clouds (or pillar of fire glow at night in exodus scene)
+  ctx.fillStyle = darkScene ? "rgba(200,205,225,0.5)" : "rgba(255,255,255,0.85)";
+  for (let i = 0; i < 5; i++) {
+    const cx = ((i * 340 - G.camX * 0.25) % (W + 260) + W + 260) % (W + 260) - 130;
+    const cy = 46 + (i % 3) * 34;
+    blob(cx, cy, 30 + (i % 2) * 12);
+  }
+  // far hills / dunes / palace skyline
+  ctx.fillStyle = th.far;
+  ctx.beginPath();
+  ctx.moveTo(0, GROUND_Y);
+  for (let x = 0; x <= W; x += 40) {
+    const wx = x + G.camX * 0.45;
+    ctx.lineTo(x, GROUND_Y - 60 - Math.sin(wx * 0.004) * 42 - Math.sin(wx * 0.013) * 14);
+  }
+  ctx.lineTo(W, GROUND_Y); ctx.closePath(); ctx.fill();
+
+  ctx.save();
+  ctx.translate(-Math.round(G.camX), 0);
+  drawScenery(s, th);
+  drawGate(s);
+  drawSpotsAndItems(s);
+  drawHazards(s);
+  drawChase(s);
+  drawFigure(player.x, player.y, s, true);
+  // particles
+  for (const p of level.particles) {
+    ctx.globalAlpha = Math.max(0, p.life / p.max);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.29); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // hail / bricks
+  ctx.font = "22px serif";
+  ctx.textAlign = "center";
+  for (const d of level.hailDrops) ctx.fillText(d.emoji, d.x, d.y);
+
+  // darkness: black overlay with lamp hole
+  if (s.dark) {
+    const px = player.x - G.camX + 17, py = player.y + 30;
+    const dg = ctx.createRadialGradient(px, py, 40, px, py, 190);
+    dg.addColorStop(0, "rgba(5,6,12,0)");
+    dg.addColorStop(0.55, "rgba(5,6,12,0.55)");
+    dg.addColorStop(1, "rgba(5,6,12,0.96)");
+    ctx.fillStyle = dg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(255,190,80,0.35)";
+    ctx.beginPath(); ctx.arc(px, py, 16 + Math.sin(G.time * 9) * 2, 0, 6.29); ctx.fill();
+  }
+  // vignette
+  const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.55, W / 2, H / 2, H * 0.95);
+  vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(30,18,8,0.18)");
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+function blob(x, y, r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 6.29); ctx.arc(x + r * 0.9, y + 4, r * 0.7, 0, 6.29); ctx.arc(x - r * 0.9, y + 5, r * 0.62, 0, 6.29);
+  ctx.fill();
+}
+
+/* scenery per theme, drawn in world coordinates */
+function drawScenery(s, th) {
+  const startX = Math.floor(G.camX / 120) * 120 - 120;
+  // ground
+  ctx.fillStyle = th.ground;
+  ctx.fillRect(G.camX - 40, GROUND_Y, W + 80, H - GROUND_Y);
+  ctx.fillStyle = th.groundTop;
+  ctx.fillRect(G.camX - 40, GROUND_Y, W + 80, 12);
+  ctx.fillStyle = "rgba(0,0,0,0.10)";
+  for (let x = startX; x < G.camX + W + 120; x += 90) ctx.fillRect(x + 20, GROUND_Y + 34 + (x % 50), 26, 5);
+
+  if (th.water && s.theme !== "sea") {
+    // river strip behind the bank
+    ctx.fillStyle = th.water;
+    const wob = Math.sin(G.time * 2) * 3;
+    ctx.fillRect(G.camX - 40, GROUND_Y - 64 + wob, W + 80, 40);
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    for (let x = startX; x < G.camX + W + 120; x += 130) ctx.fillRect(x + ((G.time * 30) % 130), GROUND_Y - 52 + wob, 34, 3);
+  }
+  if (s.theme === "sea") {
+    // dry sea floor + coral / shells, water handled in drawGate-side walls
+    ctx.font = "20px serif"; ctx.textAlign = "center";
+    for (let x = startX; x < G.camX + W + 120; x += 170) {
+      ctx.fillText(x % 340 === 0 ? "🐚" : "🪸", x + 60, GROUND_Y + 52);
+    }
+    drawWaterWalls();
+  }
+  if (s.theme === "nile" || s.theme === "nileblood") {
+    ctx.font = "30px serif"; ctx.textAlign = "center";
+    for (let x = startX; x < G.camX + W + 120; x += 240) {
+      ctx.fillText("🌴", x + 40, GROUND_Y - 6);
+      ctx.fillText("🎋", x + 170, GROUND_Y - 2);
+    }
+  }
+  if (s.theme === "palace") {
+    for (let x = startX; x < G.camX + W + 240; x += 300) {
+      ctx.fillStyle = "#d9b878";
+      ctx.fillRect(x + 60, GROUND_Y - 250, 46, 250);
+      ctx.fillRect(x + 48, GROUND_Y - 268, 70, 20);
+      ctx.fillRect(x + 48, GROUND_Y - 14, 70, 14);
+      ctx.fillStyle = "#b3541e";
+      ctx.fillRect(x + 60, GROUND_Y - 190, 46, 12);
+    }
+    ctx.font = "26px serif"; ctx.textAlign = "center"; ctx.fillText("𓂀", G.camX + W / 2, 90);
+  }
+  if (s.theme === "desert" || s.theme === "fields" || s.theme === "storm") {
+    ctx.font = "28px serif"; ctx.textAlign = "center";
+    for (let x = startX; x < G.camX + W + 120; x += 260) {
+      ctx.fillText(s.theme === "desert" ? "🌵" : "🌾", x + 90, GROUND_Y - 4);
+      if (s.theme === "fields") ctx.fillText("🌻", x + 200, GROUND_Y - 4);
+    }
+  }
+  if (s.theme === "mountain") {
+    ctx.fillStyle = "#6d5c46";
+    ctx.beginPath();
+    ctx.moveTo(level.len - 620, GROUND_Y);
+    ctx.lineTo(level.len - 330, GROUND_Y - 300);
+    ctx.lineTo(level.len - 40, GROUND_Y);
+    ctx.closePath(); ctx.fill();
+  }
+  if (s.theme === "night") {
+    // houses with doors (passover / exodus)
+    for (let x = startX; x < G.camX + W + 240; x += 330) {
+      ctx.fillStyle = "#5e4c33";
+      ctx.fillRect(x + 40, GROUND_Y - 108, 120, 108);
+      ctx.fillStyle = "#3e3a5e";
+      ctx.beginPath(); ctx.moveTo(x + 26, GROUND_Y - 108); ctx.lineTo(x + 100, GROUND_Y - 158); ctx.lineTo(x + 174, GROUND_Y - 108); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#ffd94d";
+      ctx.fillRect(x + 118, GROUND_Y - 84, 20, 20);
+    }
+    // pillar of fire ahead
+    if (G.sceneIdx === 16) {
+      const fx = level.len - 320;
+      const fl = 90 + Math.sin(G.time * 7) * 14;
+      const fg = ctx.createLinearGradient(0, GROUND_Y - 320, 0, GROUND_Y);
+      fg.addColorStop(0, "rgba(255,140,40,0)");
+      fg.addColorStop(1, "rgba(255,140,40,0.85)");
+      ctx.fillStyle = fg;
+      ctx.beginPath(); ctx.ellipse(fx, GROUND_Y - 150, 34, 160, 0, 0, 6.29); ctx.fill();
+      ctx.fillStyle = "#ffb84d";
+      ctx.beginPath(); ctx.ellipse(fx, GROUND_Y - 90, 20, fl * 0.7, 0, 0, 6.29); ctx.fill();
+    }
+  }
+  if (s.theme === "shore") {
+    ctx.font = "30px serif"; ctx.textAlign = "center";
+    for (let x = startX; x < G.camX + W + 120; x += 300) ctx.fillText("🌴", x + 60, GROUND_Y - 6);
+  }
+  // burning bush at goal area of scene 4
+  if (G.sceneIdx === 3) {
+    const bx = level.spots.length ? level.spots[0].x : level.len - 480;
+    ctx.font = "44px serif"; ctx.textAlign = "center";
+    ctx.fillText("🌳", bx, GROUND_Y - 6);
+    ctx.fillText("🔥", bx, GROUND_Y - 44 - Math.sin(G.time * 6) * 4);
+    ctx.fillStyle = "rgba(255,150,50,0.3)";
+    ctx.beginPath(); ctx.arc(bx, GROUND_Y - 60, 52 + Math.sin(G.time * 5) * 6, 0, 6.29); ctx.fill();
+  }
+}
+function drawWaterWalls() {
+  // towering walls left (behind start) is offscreen; draw wall segments at both level ends + shimmering ceiling band
+  const t = G.time;
+  ctx.fillStyle = "#1d6f8e";
+  ctx.fillRect(0, 60, 90, GROUND_Y - 60);
+  ctx.fillRect(level.len - 90, 60, 90, GROUND_Y - 60);
+  ctx.fillStyle = "#57b7d9";
+  for (let y = 80; y < GROUND_Y - 20; y += 46) {
+    ctx.fillRect(6 + Math.sin(t * 3 + y) * 4, y, 76, 7);
+    ctx.fillRect(level.len - 84 + Math.cos(t * 3 + y) * 4, y, 76, 7);
+  }
+  ctx.font = "22px serif"; ctx.textAlign = "center";
+  ctx.fillText("🐟", 46 + Math.sin(t * 2) * 6, 210);
+  ctx.fillText("🐠", level.len - 46 + Math.cos(t * 2.2) * 6, 260);
+}
+function drawGate(s) {
+  const gx = level.gateX + 40;
+  const ready = level.taskNeed === 0 || level.taskDone >= level.taskNeed;
+  const pulse = 0.75 + Math.sin(G.time * 4) * 0.25;
+  ctx.fillStyle = ready ? "rgba(217,164,65," + (0.35 * pulse + 0.25) + ")" : "rgba(120,120,120,0.22)";
+  ctx.fillRect(gx - 34, GROUND_Y - 190, 68, 190);
+  ctx.strokeStyle = ready ? "#d9a441" : "#8a8378";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(gx - 34, GROUND_Y - 190, 68, 190);
+  ctx.font = "30px serif"; ctx.textAlign = "center";
+  ctx.fillText(ready ? "⭐" : "🔒", gx, GROUND_Y - 200);
+  ctx.font = "700 15px Nunito, sans-serif";
+  ctx.fillStyle = ready ? "#7a5410" : "#6b665c";
+  const label = G.sceneIdx === SCENES.length - 1 ? "CELEBRATE!" : (ready ? "NEXT ▶" : "LOCKED");
+  ctx.fillText(label, gx, GROUND_Y - 150);
+  if (s.task.type === "hold" && level.taskDone === 0) {
+    // the sea, waiting to be parted, at the gate
+    ctx.fillStyle = "#1d6f8e";
+    const part = level.holdT / s.task.holdTime;
+    ctx.fillRect(gx + 40, 150, 400 * (1 - part * 0.85), GROUND_Y - 150);
+    ctx.fillStyle = "#57b7d9";
+    ctx.fillRect(gx + 40, 160 + Math.sin(G.time * 3) * 4, 400 * (1 - part * 0.85), 8);
+  }
+}
+function drawSpotsAndItems(s) {
+  ctx.textAlign = "center";
+  for (const sp of level.spots) {
+    if (sp.done) {
+      ctx.font = "22px serif";
+      ctx.fillText("✓", sp.x, GROUND_Y - 96);
+      continue;
+    }
+    const bobY = Math.sin(G.time * 3 + sp.x) * 5;
+    ctx.fillStyle = "rgba(217,164,65,0.4)";
+    ctx.beginPath(); ctx.arc(sp.x, GROUND_Y - 52, 30 + Math.sin(G.time * 4) * 4, 0, 6.29); ctx.fill();
+    ctx.font = "34px serif";
+    ctx.fillText(sp.emoji, sp.x, GROUND_Y - 40 + bobY);
+    if (G.sceneIdx === 15) { // passover doors get a red lintel when done handled above; unmarked door frame:
+      ctx.strokeStyle = "#8a6a42"; ctx.lineWidth = 4;
+      ctx.strokeRect(sp.x - 26, GROUND_Y - 104, 52, 104);
+    }
+  }
+  for (const it of level.items) {
+    if (it.got) continue;
+    const bobY = Math.sin(G.time * 3 + it.bob) * 6;
+    ctx.fillStyle = "rgba(255,225,130,0.45)";
+    ctx.beginPath(); ctx.arc(it.x, it.y + bobY, 24, 0, 6.29); ctx.fill();
+    ctx.font = "30px serif";
+    ctx.fillText(it.emoji, it.x, it.y + 10 + bobY);
+  }
+  if (s.task.type === "hold" && level.taskDone === 0) {
+    const hx = level.gateX - 260;
+    ctx.fillStyle = "rgba(217,164,65,0.4)";
+    ctx.beginPath(); ctx.arc(hx, GROUND_Y - 52, 34 + Math.sin(G.time * 4) * 4, 0, 6.29); ctx.fill();
+    ctx.font = "32px serif";
+    ctx.fillText("🪨", hx, GROUND_Y - 8);
+  }
+}
+function drawHazards(s) {
+  ctx.textAlign = "center";
+  for (const hz of level.hazards) {
+    if (hz.kind === "guard") {
+      drawFigure(hz.x - 17, GROUND_Y - 64, { robe: "#37474f", skin: "#c98d5e", player: "Guard" }, false, hz.dir);
+      ctx.font = "18px serif"; ctx.fillText("🪖", hz.x, GROUND_Y - 76);
+    }
+    if (hz.kind === "frog") { ctx.font = "30px serif"; ctx.fillText("🐸", hz.fx || hz.cx, (hz.fy || GROUND_Y) + 8); }
+    if (hz.kind === "gnat") {
+      ctx.fillStyle = "rgba(105,90,60,0.35)";
+      ctx.beginPath(); ctx.ellipse(hz.x, GROUND_Y - 66, 42, 62, 0, 0, 6.29); ctx.fill();
+      ctx.font = "15px serif";
+      for (let i = 0; i < 5; i++) ctx.fillText("·", hz.x + Math.sin(G.time * 6 + i * 2) * 30, GROUND_Y - 110 + ((i * 23) % 90));
+      ctx.font = "22px serif"; ctx.fillText("🦟", hz.x + Math.sin(G.time * 4) * 16, GROUND_Y - 70 + Math.cos(G.time * 5) * 10);
+    }
+    if (hz.kind === "flies") { ctx.font = "26px serif"; ctx.fillText("🪰🪰", hz.cx, hz.cy); }
+    if (hz.kind === "locust") { ctx.font = "26px serif"; ctx.fillText("🦗🦗", hz.cx, hz.cy); }
+    if (hz.kind === "fallen") { ctx.font = "32px serif"; ctx.fillText(hz.emoji, hz.x, GROUND_Y - 4); }
+  }
+}
+function drawChase(s) {
+  if (!level.chaseSpeed || level.chaseX < -300) return;
+  const cx = level.chaseX;
+  if (level.chaseWater) {
+    ctx.fillStyle = "#1d6f8e";
+    ctx.fillRect(cx - 700, 90, 700, GROUND_Y - 90);
+    ctx.fillStyle = "#57b7d9";
+    for (let y = 110; y < GROUND_Y - 20; y += 52) ctx.fillRect(cx - 692 + Math.sin(G.time * 4 + y) * 5, y, 680, 8);
+    ctx.font = "26px serif"; ctx.textAlign = "center"; ctx.fillText("🌊", cx - 30, 200);
+  } else {
+    // chariot silhouette
+    ctx.font = "52px serif"; ctx.textAlign = "center";
+    ctx.fillText("🐎", cx - 60, GROUND_Y - 40 + Math.sin(G.time * 10) * 3);
+    ctx.fillText("🛞", cx - 6, GROUND_Y - 14);
+    ctx.font = "30px serif"; ctx.fillText("🏇", cx - 44, GROUND_Y - 74);
+    ctx.fillStyle = "rgba(160,120,60,0.5)";
+    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(cx - 90 - i * 26, GROUND_Y - 8 - (i % 3) * 9, 10 + i * 2, 0, 6.29); ctx.fill(); }
+  }
+}
+
+/* a simple robed figure; player gets a staff (Moses) / tambourine (Miriam) */
+function drawFigure(x, y, s, isPlayer, faceOverride) {
+  const face = faceOverride !== undefined ? faceOverride : player.face;
+  const walking = isPlayer && Math.abs(player.vx) > 12 && player.onGround;
+  const legSwing = walking ? Math.sin(player.walkPhase) * 7 : 0;
+  const blink = isPlayer && player.invuln > 0 && Math.floor(G.time * 12) % 2 === 0;
+  ctx.save();
+  if (blink) ctx.globalAlpha = 0.35;
+  // legs
+  ctx.strokeStyle = "#5e4630"; ctx.lineWidth = 6; ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x + 17, y + 44); ctx.lineTo(x + 17 + legSwing, y + 62);
+  ctx.moveTo(x + 17, y + 44); ctx.lineTo(x + 17 - legSwing, y + 62);
+  ctx.stroke();
+  // robe
+  ctx.fillStyle = s.robe;
+  ctx.beginPath();
+  ctx.moveTo(x + 17, y + 12);
+  ctx.lineTo(x + 30, y + 50);
+  ctx.lineTo(x + 4, y + 50);
+  ctx.closePath(); ctx.fill();
+  // sash
+  ctx.strokeStyle = "#d9a441"; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x + 8, y + 30); ctx.lineTo(x + 26, y + 22); ctx.stroke();
+  // head
+  ctx.fillStyle = s.skin;
+  ctx.beginPath(); ctx.arc(x + 17, y + 6, 10, 0, 6.29); ctx.fill();
+  // hair / head covering
+  ctx.fillStyle = isPlayer ? "#3a2a1a" : "#222";
+  ctx.beginPath(); ctx.arc(x + 17, y + 2, 10, 3.4, 6.0); ctx.fill();
+  ctx.restore();
+
+  if (isPlayer) {
+    ctx.save();
+    if (blink) ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = "#7a4a21"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    const holdingUp = level && level.def.task.type === "hold" && actionHeld && level.taskDone === 0;
+    if (holdingUp) {
+      ctx.beginPath(); ctx.moveTo(x + 17 + face * 8, y + 24); ctx.lineTo(x + 17 + face * 16, y - 18); ctx.stroke();
+      ctx.fillStyle = "#57b7d9";
+      ctx.beginPath(); ctx.arc(x + 17 + face * 16, y - 22, 5 + Math.sin(G.time * 8) * 1.5, 0, 6.29); ctx.fill();
+    } else if (s.player === "Miriam" && G.sceneIdx === 21) {
+      ctx.font = "20px serif"; ctx.textAlign = "center";
+      ctx.fillText("🥁", x + 17 + face * 18, y + 26);
+    } else if (s.player === "Jochebed") {
+      ctx.font = "20px serif"; ctx.textAlign = "center";
+      ctx.fillText("🧺", x + 17 + face * 18, y + 28);
+    } else if (s.player === "Moses") {
+      ctx.beginPath(); ctx.moveTo(x + 17 + face * 10, y + 24); ctx.lineTo(x + 17 + face * 14, y + 52); ctx.stroke();
+    }
+    // name tag
+    ctx.font = "800 12px Nunito, sans-serif"; ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(30,20,10,0.75)";
+    const label = s.player;
+    const tw = ctx.measureText(label).width + 12;
+    roundRect(x + 17 - tw / 2, y - 30, tw, 17, 8); ctx.fill();
+    ctx.fillStyle = "#fdf3dd";
+    ctx.fillText(label, x + 17, y - 17);
+    ctx.restore();
+  }
+}
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ---------------- Main loop ---------------- */
+let lastT = performance.now();
+function frame(now) {
+  const dt = Math.min(0.033, (now - lastT) / 1000);
+  lastT = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(frame);
+}
+
+/* boot */
+level = buildLevel(0);
+buildSceneGrid();
+updateHUD();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
