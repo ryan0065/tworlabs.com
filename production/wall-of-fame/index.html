@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wall of Fame — TwoRLabs</title>
+  <meta name="description" content="The TwoRLabs Wall of Fame: the top Ridge World scores and the best edited photos, all from Ridge and Rhett's games.">
+  <link rel="canonical" href="https://tworlabs.com/wall-of-fame/">
+  <meta name="theme-color" content="#02205A">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TwoRLabs">
+  <meta property="og:url" content="https://tworlabs.com/wall-of-fame/">
+  <meta property="og:title" content="Wall of Fame — TwoRLabs">
+  <meta property="og:description" content="The top Ridge World scores and the best edited photos.">
+  <meta property="og:image" content="https://tworlabs.com/assets/og.jpg">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon-32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/favicon-16.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="scenery" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="stars stars-lg"></div>
+    <span class="spark s1"></span>
+    <span class="spark s2"></span>
+    <span class="spark s3 gold"></span>
+    <span class="spark s4"></span>
+    <span class="spark s5 gold"></span>
+    <span class="spark s6"></span>
+    <span class="spark s7"></span>
+    <span class="spark s8 gold"></span>
+    <img class="cloud k1" src="/assets/cloud.png" alt="" width="160" height="60">
+    <img class="cloud k2" src="/assets/cloud-b.png" alt="" width="130" height="50">
+    <img class="cloud k3" src="/assets/cloud.png" alt="" width="160" height="60">
+    <img class="cloud k4" src="/assets/cloud-b.png" alt="" width="130" height="50">
+    <img class="cloud k5" src="/assets/cloud.png" alt="" width="160" height="60">
+    <img class="tree ta" src="/assets/tree-c.png" alt="" width="180" height="140">
+    <img class="tree tb" src="/assets/tree-a.png" alt="" width="160" height="110">
+    <img class="rock ra" src="/assets/rock.png" alt="" width="60" height="40">
+    <img class="tree tc" src="/assets/tree-c.png" alt="" width="180" height="140">
+    <img class="tree td" src="/assets/tree-b.png" alt="" width="120" height="90">
+    <img class="rock rb" src="/assets/rock.png" alt="" width="60" height="40">
+  </div>
+
+  <main id="main">
+    <h1 class="pixel-title lab-title">Wall of Fame</h1>
+    <p class="tagline">The top Ridge World scores — and the best edited photos.</p>
+    <p><a class="button" href="/">Back home</a> <a class="button" href="/games/ridge-world/v12/">Play Ridge World</a> <a class="button" href="/games/photo-edit-game/v2/">Edit a photo</a></p>
+
+    <h2 class="lab-card-title">Top Scores</h2>
+    <div id="board-scores" class="lab-list">
+      <p class="lab-loading">Loading scores…</p>
+    </div>
+
+    <h2 class="lab-card-title">Photo Wall</h2>
+    <p>Edited photos from the Photo Edit Game. Every photo is checked by Dad before it shows up here.</p>
+    <div id="board-photos" class="photo-grid">
+      <p class="lab-loading">Loading photos…</p>
+    </div>
+    <noscript>
+      <p>The Wall of Fame needs JavaScript to load the scores and photos.</p>
+    </noscript>
+  </main>
+
+  <div class="ground" aria-hidden="true"></div>
+    <script src="/js/wall-of-fame.js" defer></script>
+</body>
+</html>
