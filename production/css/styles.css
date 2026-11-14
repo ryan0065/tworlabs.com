@@ -618,3 +618,42 @@ button[type="submit"]:disabled {
 .lab-notes .button {
   margin-top: 0.4rem;
 }
+
+/* Wall of Fame board + photo review */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+.photo-card {
+  margin: 0;
+  background: #fff;
+  color: #12233f;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+}
+.photo-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.photo-card figcaption {
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.fame-row {
+  margin-bottom: 0.75rem;
+}
+.admin-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 0.8rem 0.8rem;
+}
+.admin-actions .button {
+  margin-top: 0;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+}
