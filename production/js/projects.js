@@ -5,7 +5,7 @@
     });
   }
   // Projects that live in the Studio instead of Games.
-  var STUDIO_GAMES = { "Photo Edit Game": true };
+  var STUDIO_GAMES = { "Photo Edit Game": true, "Photo Studio": true };
   // Display names where the Lab Notes game name differs from the project name.
   var DISPLAY_NAMES = { "Loading Screen and Lobby": "Lobby Game" };
   function slugFrom(url) {
