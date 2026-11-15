@@ -60,4 +60,73 @@
       if (gamesList) fail(gamesList);
       if (studioList) fail(studioList);
     });
+
+  // Projects feedback form: toggle + submit to /api/feedback.
+  var fbOpen = document.getElementById("feedback-open");
+  var fbSection = document.getElementById("feedback");
+  var fbForm = document.getElementById("feedback-form");
+  var fbStatus = document.getElementById("feedback-status");
+  function setFbStatus(text, cls) {
+    if (!fbStatus) return;
+    fbStatus.textContent = text;
+    fbStatus.className = "status" + (cls ? " " + cls : "");
+  }
+  if (fbOpen && fbSection) {
+    fbOpen.addEventListener("click", function () {
+      var opening = fbSection.hidden;
+      fbSection.hidden = !opening;
+      if (opening) {
+        fbSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        var msg = document.getElementById("feedback-message");
+        if (msg) msg.focus();
+      }
+    });
+  }
+  if (fbForm && fbStatus) {
+    fbForm.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var btn = fbForm.querySelector("button[type='submit']");
+      var name = document.getElementById("feedback-name");
+      var project = document.getElementById("feedback-project");
+      var message = document.getElementById("feedback-message");
+      var fax = fbForm.querySelector("input[name='fax_number']");
+      setFbStatus("");
+      var text = message ? message.value.trim() : "";
+      if (text.length < 10) {
+        setFbStatus("Please write a little more — at least a few words.", "is-error");
+        if (message) message.focus();
+        return;
+      }
+      if (text.length > 2000) {
+        setFbStatus("Please keep it under 2000 characters.", "is-error");
+        return;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: name ? name.value : "",
+          project: project ? project.value : "General",
+          message: text,
+          fax_number: fax ? fax.value : ""
+        })
+      })
+        .then(function (r) { return r.json().then(function (d) { return { status: r.status, body: d }; }); })
+        .then(function (res) {
+          if (res.body && res.body.ok) {
+            setFbStatus(res.body.message || "Thanks! Your feedback is on its way to the team.", "is-success");
+            fbForm.reset();
+          } else {
+            setFbStatus((res.body && res.body.message) || "Something went wrong — please try again in a minute.", "is-error");
+          }
+        })
+        .catch(function () {
+          setFbStatus("Something went wrong — please try again in a minute.", "is-error");
+        })
+        .then(function () {
+          if (btn) { btn.disabled = false; btn.textContent = "Send feedback"; }
+        });
+    });
+  }
 })();
