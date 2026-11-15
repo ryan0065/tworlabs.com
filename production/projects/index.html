@@ -50,7 +50,7 @@
   <main id="main">
     <h1 class="pixel-title lab-title">Projects</h1>
     <p class="tagline">Games to play, and a studio to make things in.</p>
-    <p><a class="button" href="/">Back home</a> <button class="button" id="feedback-open" type="button">💬 Feedback</button></p>
+    <p><a class="button" href="/">Back home</a> <a class="button" href="#feedback" id="feedback-open">💬 Feedback</a></p>
 
     <section class="project-section" aria-labelledby="projects-games-heading">
       <h2 id="projects-games-heading" class="project-section-title">Games</h2>
@@ -66,7 +66,7 @@
       </div>
     </section>
 
-    <section id="feedback" class="project-section" hidden aria-labelledby="feedback-heading">
+    <section id="feedback" class="project-section" aria-labelledby="feedback-heading">
       <h2 id="feedback-heading" class="project-section-title">Feedback</h2>
       <p>Got a comment or a suggestion for the TwoRLabs team? Send it here — it goes straight to the team and isn't posted anywhere public.</p>
       <form id="feedback-form" class="feedback-form" action="/api/feedback" method="post">
@@ -156,6 +156,6 @@
   </main>
 
   <div class="ground" aria-hidden="true"></div>
-  <script src="/js/projects.js" defer></script>
+  <script src="/js/projects.js?v=2" defer></script>
 </body>
 </html>
