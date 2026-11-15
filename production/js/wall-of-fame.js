@@ -4,9 +4,9 @@
       return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c];
     });
   }
-  function fmtDate(ts) {
+  function fmtDateTime(ts) {
     try {
-      return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      return new Date(ts).toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
     } catch (e) {
       return "";
     }
@@ -26,7 +26,7 @@
       }
       var rows = scores.map(function (e, i) {
         return '<article class="lab-card fame-row">' +
-          '<p class="lab-meta">#' + (i + 1) + ' · ' + esc(fmtDate(e.ts)) + '</p>' +
+          '<p class="lab-meta">#' + (i + 1) + ' · ' + esc(e.game || "Ridge World") + ' · ' + esc(fmtDateTime(e.ts)) + '</p>' +
           '<h2 class="lab-card-title">' + esc(e.name) + '</h2>' +
           '<p>⭐ ' + esc(e.score) + ' points · 🎯 ' + esc(e.acc) + '% accuracy · smashed ' + esc(e.smashed) + ' things</p>' +
           '</article>';
@@ -48,7 +48,7 @@
       var cards = photos.map(function (p) {
         return '<figure class="photo-card">' +
           '<img src="/api/photos/' + esc(p.id) + '" alt="Edited photo by ' + esc(p.name) + '" loading="lazy">' +
-          '<figcaption>' + esc(p.name) + ' · ' + esc(fmtDate(p.ts)) + '</figcaption>' +
+          '<figcaption>' + esc(p.name) + ' · Photo Edit Game · ' + esc(fmtDateTime(p.ts)) + '</figcaption>' +
           '</figure>';
       }).join("");
       photosEl.innerHTML = cards;
