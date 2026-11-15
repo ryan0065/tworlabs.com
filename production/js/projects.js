@@ -66,19 +66,26 @@
   var fbSection = document.getElementById("feedback");
   var fbForm = document.getElementById("feedback-form");
   var fbStatus = document.getElementById("feedback-status");
+  // Hide the form once this script runs. Without this script (or with a
+  // stale cached copy) the form stays visible and the Feedback link jumps
+  // straight to it, so the button can never be dead on iOS.
+  if (fbSection) fbSection.hidden = true;
   function setFbStatus(text, cls) {
     if (!fbStatus) return;
     fbStatus.textContent = text;
     fbStatus.className = "status" + (cls ? " " + cls : "");
   }
   if (fbOpen && fbSection) {
-    fbOpen.addEventListener("click", function () {
+    fbOpen.addEventListener("click", function (ev) {
+      ev.preventDefault();
       var opening = fbSection.hidden;
       fbSection.hidden = !opening;
       if (opening) {
-        fbSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        var msg = document.getElementById("feedback-message");
-        if (msg) msg.focus();
+        // Let layout settle after unhiding before scrolling, or iOS
+        // Safari scrolls to the wrong spot.
+        requestAnimationFrame(function () {
+          fbSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
       }
     });
   }
