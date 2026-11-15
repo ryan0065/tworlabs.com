@@ -1,9 +1,14 @@
 /**
- * GET  /api/fame  -> { ok, scores: [{ name, score, smashed, acc, ts }] } (top 10)
+ * GET  /api/fame  -> { ok, scores: [{ name, game, score, smashed, acc, ts }] } (top 10)
  * POST /api/fame  -> { ok, rank } — submits one score to the shared Wall of Fame.
+ *   Accepts { name, game, score, smashed, acc }. The game name is stored
+ *   with the score and shown on the board (older scores without one read
+ *   as "RIDGE WORLD").
  *
  * Scores post straight to the board (no approval hold). Names are capped at
- * 12 characters, first names only, no links. The KV namespace must be bound
+ * 12 characters, first names only, no links. Names (and game names) are
+ * checked against a bad-word and link filter — a blocked name is rejected
+ * with error "name_not_allowed". The KV namespace must be bound
  * as tworlabs_wall (Pages -> Settings -> Bindings, or [[kv_namespaces]] in
  * wrangler.toml).
  *
@@ -40,7 +45,8 @@ export async function onRequestGet(context) {
     console.error(JSON.stringify({ event: "fame", outcome: "error", stage: "read" }));
     return respond({ ok: false, message: "The Wall of Fame is offline for a minute. Please try again soon." }, 503);
   }
-  return respond({ ok: true, scores: scores.slice(0, 10) });
+  const top = scores.slice(0, 10).map((e) => ({ ...e, game: e.game || "RIDGE WORLD" }));
+  return respond({ ok: true, scores: top });
 }
 
 export async function onRequestPost(context) {
@@ -77,14 +83,19 @@ export async function onRequestPost(context) {
   }
 
   const name = sanitizeName(fields.name);
+  const game = sanitizeGame(fields.game);
   const score = toInt(fields.score, 0, 999999);
   const smashed = toInt(fields.smashed, 0, 9999);
   const acc = toInt(fields.acc, 0, 100);
   if (score === null || smashed === null || acc === null) {
     return respond({ ok: false, message: "Please send a name and a score." }, 400);
   }
+  if (nameNotAllowed(name) || nameNotAllowed(game)) {
+    console.log(JSON.stringify({ event: "fame", outcome: "name_not_allowed" }));
+    return respond({ ok: false, error: "name_not_allowed", message: "That name can't go on the wall — please pick another name." }, 400);
+  }
 
-  const entry = { name, score, smashed, acc, ts: new Date().toISOString() };
+  const entry = { name, game, score, smashed, acc, ts: new Date().toISOString() };
 
   try {
     const scores = await readScores(env.tworlabs_wall);
@@ -93,7 +104,7 @@ export async function onRequestPost(context) {
     const kept = scores.slice(0, MAX_STORED);
     await env.tworlabs_wall.put(SCORES_KEY, JSON.stringify(kept));
     const rank = kept.slice(0, 10).indexOf(entry);
-    console.log(JSON.stringify({ event: "fame", outcome: "stored", name, score }));
+    console.log(JSON.stringify({ event: "fame", outcome: "stored", name, game, score }));
     return respond({ ok: true, rank: rank === -1 ? null : rank + 1 });
   } catch (error) {
     console.error(JSON.stringify({ event: "fame", outcome: "error", stage: "store" }));
@@ -132,6 +143,51 @@ function sanitizeName(value) {
   return cleaned || "RIDGE";
 }
 
+function sanitizeGame(value) {
+  if (typeof value !== "string") return "RIDGE WORLD";
+  const cleaned = value
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9 &.'-]/g, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 40)
+    .trim();
+  return cleaned || "RIDGE WORLD";
+}
+
+// Names that keep a submission off the wall: profanity, slurs, sexual
+// terms, and anything that looks like a link. Checked against the
+// sanitized (uppercased) name. Substring words are matched against the
+// letters-only name so spaced-out spelling ("F U C K") is caught too;
+// token words only match whole words so "CLASS" never trips "ASS".
+const BLOCKED_SUBSTRINGS = [
+  "FUCK", "SHIT", "BITCH", "CUNT", "WHORE", "SLUT", "DICK", "COCK",
+  "PUSSY", "PORN", "ONLYFANS", "DISCORD", "HTTP", "NIGGER", "NIGGA",
+  "FAGGOT", "FAGOT", "RETARD", "WANK", "BOOB", "TITS", "CLIT",
+  "PENIS", "VAGINA", "ANAL", "ORGASM", "HORNY", "NAZI", "HITLER", "SEX",
+];
+const BLOCKED_TOKENS = ["ASS", "CUM", "FAG", "TIT"];
+const BLOCKED_LINK_TLDS = ["COM", "NET", "ORG", "IO", "CO", "GG", "ME", "LY", "TV", "XYZ", "SITE", "ONLINE", "TOP", "CLICK", "LINK", "APP", "DEV", "BIZ", "INFO", "US", "UK", "CA"];
+
+function nameNotAllowed(name) {
+  if (typeof name !== "string") return true;
+  const lettersOnly = name.replace(/[^A-Z]/g, "");
+  for (const word of BLOCKED_SUBSTRINGS) {
+    if (lettersOnly.includes(word)) return true;
+  }
+  const tokens = name.split(/[^A-Z]+/).filter(Boolean);
+  for (const token of tokens) {
+    if (BLOCKED_TOKENS.includes(token)) return true;
+  }
+  if (name.includes("://") || name.includes("WWW.")) return true;
+  for (const tld of BLOCKED_LINK_TLDS) {
+    if (name.includes("." + tld) && name.endsWith(tld)) return true;
+  }
+  return false;
+}
+
 function toInt(value, min, max) {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return null;
@@ -167,6 +223,7 @@ async function readFields(request) {
   }
   return {
     name: typeof data.name === "string" ? data.name : "",
+    game: typeof data.game === "string" ? data.game : "",
     score: data.score,
     smashed: data.smashed,
     acc: data.acc,
