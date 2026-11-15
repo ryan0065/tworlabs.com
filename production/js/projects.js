@@ -44,11 +44,15 @@
     .then(function (data) {
       var entries = (data && data.entries) || [];
       // Entries are newest first, so the first entry per game is its latest version.
+      // Group by the game's URL slug, not its display name, so a rename
+      // (Photo Edit Game -> Photo Studio) shows one card, not two.
       var seen = {};
       var latest = [];
       entries.forEach(function (e) {
-        if (!e.game || seen[e.game]) return;
-        seen[e.game] = true;
+        if (!e.game || !e.play_url) return;
+        var slug = slugFrom(e.play_url);
+        if (!slug || seen[slug]) return;
+        seen[slug] = true;
         latest.push(e);
       });
       var games = latest.filter(function (e) { return !STUDIO_GAMES[e.game]; });
