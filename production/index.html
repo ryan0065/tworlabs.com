@@ -94,19 +94,6 @@
 
     <p class="home-links"><a class="button" href="/lab-notes/">Lab Notes</a> <a class="button" href="/wall-of-fame/">Wall of Fame</a> <a class="button" href="/projects/">Projects</a></p>
 
-    <form id="notify" class="notify" action="/api/subscribe" method="post">
-      <div class="hp" aria-hidden="true">
-        <label for="fax_number">Fax number</label>
-        <input id="fax_number" name="fax_number" type="text" tabindex="-1" autocomplete="off" value="">
-      </div>
-      <div class="signup-row">
-        <button type="submit">Get Notified</button>
-        <label class="sr-only" for="email">Your email</label>
-        <input id="email" name="email" class="email" type="email" inputmode="email" autocomplete="email" placeholder="Your email" maxlength="254" required spellcheck="false" aria-describedby="form-status">
-      </div>
-      <p id="form-status" class="status" role="status" aria-live="polite"></p>
-    </form>
-
     <!-- Edit social links in this list. Replace each href. -->
     <ul class="social">
       <li>
@@ -150,6 +137,20 @@
         </a>
       </li>
     </ul>
+
+    <form id="notify" class="notify" action="/api/subscribe" method="post">
+      <div class="hp" aria-hidden="true">
+        <label for="fax_number">Fax number</label>
+        <input id="fax_number" name="fax_number" type="text" tabindex="-1" autocomplete="off" value="">
+      </div>
+      <div class="signup-row">
+        <button type="submit">Get Notified</button>
+        <label class="sr-only" for="email">Your email</label>
+        <input id="email" name="email" class="email" type="email" inputmode="email" autocomplete="email" placeholder="Your email" maxlength="254" required spellcheck="false" aria-describedby="form-status">
+      </div>
+      <p id="form-status" class="status" role="status" aria-live="polite"></p>
+    </form>
+
   </main>
 
   <div class="ground" aria-hidden="true"></div>
