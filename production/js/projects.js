@@ -19,7 +19,7 @@
     var name = displayName(e.game);
     var slug = slugFrom(e.play_url);
     return '<article class="project-card">' +
-      '<a href="' + esc(e.play_url) + '"><img class="project-shot" src="/assets/projects/' + esc(slug) + '.png" alt="' + esc(name) + '" loading="lazy" width="800" height="500"></a>' +
+      '<a href="' + esc(e.play_url) + '"><img class="project-shot" src="/assets/projects/' + esc(slug) + '.png" alt="' + esc(name) + '" loading="lazy" width="200" height="125"></a>' +
       '<h3 class="project-title">' + esc(name) + ' <span class="project-version">' + esc(e.version) + '</span></h3>' +
       '<p class="project-meta">' + esc(e.who) + ' \u00b7 ' + esc(e.date_display) + '</p>' +
       '<p>' + esc(e.note) + '</p>' +
