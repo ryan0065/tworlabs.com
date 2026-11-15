@@ -50,7 +50,7 @@
   <main id="main">
     <h1 class="pixel-title lab-title">Projects</h1>
     <p class="tagline">Games to play, and a studio to make things in.</p>
-    <p><a class="button" href="/">Back home</a></p>
+    <p><a class="button" href="/">Back home</a> <button class="button" id="feedback-open" type="button">💬 Feedback</button></p>
 
     <section class="project-section" aria-labelledby="projects-games-heading">
       <h2 id="projects-games-heading" class="project-section-title">Games</h2>
@@ -64,6 +64,39 @@
       <div id="projects-studio" class="project-grid">
         <p class="lab-loading">Loading projects…</p>
       </div>
+    </section>
+
+    <section id="feedback" class="project-section" hidden aria-labelledby="feedback-heading">
+      <h2 id="feedback-heading" class="project-section-title">Feedback</h2>
+      <p>Got a comment or a suggestion for the TwoRLabs team? Send it here — it goes straight to the team and isn't posted anywhere public.</p>
+      <form id="feedback-form" class="feedback-form" action="/api/feedback" method="post">
+        <div class="hp" aria-hidden="true">
+          <label for="feedback-fax">Fax number</label>
+          <input id="feedback-fax" name="fax_number" type="text" tabindex="-1" autocomplete="off" value="">
+        </div>
+        <p>
+          <label for="feedback-name">Your name (optional)</label>
+          <input id="feedback-name" name="name" type="text" maxlength="80" autocomplete="name" placeholder="Your name">
+        </p>
+        <p>
+          <label for="feedback-project">Which project is this about?</label>
+          <select id="feedback-project" name="project">
+            <option>General</option>
+            <option>Ridge World</option>
+            <option>Dad's Pool Game</option>
+            <option>Photo Studio</option>
+            <option>TwoRLabs Interactive World</option>
+            <option>Lobby Game</option>
+            <option>Moses — Escape from Egypt</option>
+          </select>
+        </p>
+        <p>
+          <label for="feedback-message">Your comment or suggestion</label>
+          <textarea id="feedback-message" name="message" rows="5" maxlength="2000" required placeholder="Tell us what you think, or what we should build next…"></textarea>
+        </p>
+        <p><button class="button" type="submit">Send feedback</button></p>
+        <p id="feedback-status" class="status" role="status" aria-live="polite"></p>
+      </form>
     </section>
 
     <noscript>
