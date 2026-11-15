@@ -2,6 +2,8 @@
  * GET  /api/photos               -> { ok, photos: [{ id, name, ts }] } (approved only)
  * GET  /api/photos?status=pending -> { ok, photos: [...] } (held for review)
  * POST /api/photos               -> { ok, id } — submits one edited photo for review.
+ *   Names are checked against a bad-word and link filter — a blocked name
+ *   is rejected with error "name_not_allowed".
  *
  * Photos do NOT post straight to the board: every photo is held for Dad's
  * approval first (POST /api/photos/approve). The KV namespace must be bound
@@ -88,10 +90,15 @@ export async function onRequestPost(context) {
     return respond({ ok: false, message: "The photo wall is offline for a minute. Please try again soon." }, 503);
   }
 
+  const name = sanitizeName(fields.name);
+  if (nameNotAllowed(name)) {
+    console.log(JSON.stringify({ event: "photos", outcome: "name_not_allowed" }));
+    return respond({ ok: false, error: "name_not_allowed", message: "That name can't go on the wall — please pick another name." }, 400);
+  }
   const id = crypto.randomUUID();
   const record = {
     id,
-    name: sanitizeName(fields.name),
+    name,
     image,
     ts: new Date().toISOString(),
   };
@@ -138,6 +145,37 @@ function sanitizeName(value) {
     .slice(0, 12)
     .trim();
   return cleaned || "ANONYMOUS";
+}
+
+// Names that keep a submission off the wall: profanity, slurs, sexual
+// terms, and anything that looks like a link. Checked against the
+// sanitized (uppercased) name. Substring words are matched against the
+// letters-only name so spaced-out spelling ("F U C K") is caught too;
+// token words only match whole words so "CLASS" never trips "ASS".
+const BLOCKED_SUBSTRINGS = [
+  "FUCK", "SHIT", "BITCH", "CUNT", "WHORE", "SLUT", "DICK", "COCK",
+  "PUSSY", "PORN", "ONLYFANS", "DISCORD", "HTTP", "NIGGER", "NIGGA",
+  "FAGGOT", "FAGOT", "RETARD", "WANK", "BOOB", "TITS", "CLIT",
+  "PENIS", "VAGINA", "ANAL", "ORGASM", "HORNY", "NAZI", "HITLER", "SEX",
+];
+const BLOCKED_TOKENS = ["ASS", "CUM", "FAG", "TIT"];
+const BLOCKED_LINK_TLDS = ["COM", "NET", "ORG", "IO", "CO", "GG", "ME", "LY", "TV", "XYZ", "SITE", "ONLINE", "TOP", "CLICK", "LINK", "APP", "DEV", "BIZ", "INFO", "US", "UK", "CA"];
+
+function nameNotAllowed(name) {
+  if (typeof name !== "string") return true;
+  const lettersOnly = name.replace(/[^A-Z]/g, "");
+  for (const word of BLOCKED_SUBSTRINGS) {
+    if (lettersOnly.includes(word)) return true;
+  }
+  const tokens = name.split(/[^A-Z]+/).filter(Boolean);
+  for (const token of tokens) {
+    if (BLOCKED_TOKENS.includes(token)) return true;
+  }
+  if (name.includes("://") || name.includes("WWW.")) return true;
+  for (const tld of BLOCKED_LINK_TLDS) {
+    if (name.includes("." + tld) && name.endsWith(tld)) return true;
+  }
+  return false;
 }
 
 function originAllowed(request) {
