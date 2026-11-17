@@ -772,3 +772,13 @@ button[type="submit"]:disabled {
   min-height: 120px;
   resize: vertical;
 }
+
+/* Lab Notes avatars: the full logo sits at the left of each entry. */
+.lab-card { display: flex; gap: 16px; align-items: flex-start; }
+.lab-avatars { flex: 0 0 88px; display: flex; flex-direction: column; gap: 8px; }
+.lab-avatars img { width: 88px; height: auto; display: block; }
+.lab-card-body { flex: 1; min-width: 0; }
+@media (max-width: 420px) {
+  .lab-avatars { flex-basis: 64px; }
+  .lab-avatars img { width: 64px; }
+}
