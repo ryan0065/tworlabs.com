@@ -11,6 +11,8 @@
   var EDU_GAMES = { "Oklahoma Trivia": true, "Shepherd's Class": true };
   // Cache-bust a card image after its screenshot is retaken (e.g. ?v=2).
   var SHOT_VERSIONS = { "oklahoma-trivia": 2 };
+  // Version override when a game is republished without a Lab Notes entry.
+  var VERSION_OVERRIDES = { "oklahoma-trivia": { version: "v3", play_url: "/games/oklahoma-trivia/v3/" } };
   // Display names where the Lab Notes game name differs from the project name.
   var DISPLAY_NAMES = { "Loading Screen and Lobby": "Lobby Game" };
   function slugFrom(url) {
@@ -60,6 +62,8 @@
         var slug = slugFrom(e.play_url);
         if (!slug || seen[slug]) return;
         seen[slug] = true;
+        var ov = VERSION_OVERRIDES[slug];
+        if (ov) { e.version = ov.version; e.play_url = ov.play_url; }
         latest.push(e);
       });
       var games = latest.filter(function (e) { return !STUDIO_GAMES[e.game] && !EDU_GAMES[e.game]; });
