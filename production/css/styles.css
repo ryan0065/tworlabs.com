@@ -437,7 +437,9 @@ button[type="submit"]:disabled {
 .social a:hover { transform: translateY(-2px); }
 .social svg { width: 22px; height: 22px; display: block; }
 
+.fb { background: #1877f2; }
 .ig { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
+.th { background: #000; }
 .tw { background: #1d9bf0; }
 .li { background: #0a66c2; }
 .yt { background: #ff0033; }
