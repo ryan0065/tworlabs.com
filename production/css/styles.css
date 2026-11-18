@@ -750,6 +750,7 @@ button[type="submit"]:disabled {
   font-weight: 700;
 }
 
+.feedback-form input[type="email"],
 .feedback-form input[type="text"],
 .feedback-form select,
 .feedback-form textarea {
