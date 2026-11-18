@@ -9,6 +9,8 @@
 
   // Educational games live in their own section instead of Games.
   var EDU_GAMES = { "Oklahoma Trivia": true, "Shepherd's Class": true };
+  // Cache-bust a card image after its screenshot is retaken (e.g. ?v=2).
+  var SHOT_VERSIONS = { "oklahoma-trivia": 2 };
   // Display names where the Lab Notes game name differs from the project name.
   var DISPLAY_NAMES = { "Loading Screen and Lobby": "Lobby Game" };
   function slugFrom(url) {
@@ -21,8 +23,9 @@
   function card(e) {
     var name = displayName(e.game);
     var slug = slugFrom(e.play_url);
+    var shot = '/assets/projects/' + esc(slug) + '.png' + (SHOT_VERSIONS[slug] ? '?v=' + SHOT_VERSIONS[slug] : '');
     return '<article class="project-card">' +
-      '<a href="' + esc(e.play_url) + '"><img class="project-shot" src="/assets/projects/' + esc(slug) + '.png" alt="' + esc(name) + '" loading="lazy" width="200" height="125"></a>' +
+      '<a href="' + esc(e.play_url) + '"><img class="project-shot" src="' + shot + '" alt="' + esc(name) + '" loading="lazy" width="200" height="125"></a>' +
       '<h3 class="project-title">' + esc(name) + ' <span class="project-version">' + esc(e.version) + '</span></h3>' +
       '<p class="project-meta">' + esc(e.who) + ' \u00b7 ' + esc(e.date_display) + '</p>' +
       '<p>' + esc(e.note) + '</p>' +
