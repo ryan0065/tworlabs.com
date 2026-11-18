@@ -6,6 +6,9 @@
   }
   // Projects that live in the Studio instead of Games.
   var STUDIO_GAMES = { "Photo Edit Game": true, "Photo Studio": true };
+
+  // Educational games live in their own section instead of Games.
+  var EDU_GAMES = { "Oklahoma Trivia": true, "Shepherd's Class": true };
   // Display names where the Lab Notes game name differs from the project name.
   var DISPLAY_NAMES = { "Loading Screen and Lobby": "Lobby Game" };
   function slugFrom(url) {
@@ -38,7 +41,8 @@
   }
   var gamesList = document.getElementById("projects-games");
   var studioList = document.getElementById("projects-studio");
-  if (!gamesList && !studioList) return;
+  var eduList = document.getElementById("projects-education");
+  if (!gamesList && !studioList && !eduList) return;
   fetch("/lab-notes.json")
     .then(function (r) { if (!r.ok) throw new Error("Lab Notes not found"); return r.json(); })
     .then(function (data) {
@@ -55,14 +59,17 @@
         seen[slug] = true;
         latest.push(e);
       });
-      var games = latest.filter(function (e) { return !STUDIO_GAMES[e.game]; });
+      var games = latest.filter(function (e) { return !STUDIO_GAMES[e.game] && !EDU_GAMES[e.game]; });
       var studio = latest.filter(function (e) { return STUDIO_GAMES[e.game]; });
+      var edu = latest.filter(function (e) { return EDU_GAMES[e.game]; });
       if (gamesList) render(gamesList, games);
       if (studioList) render(studioList, studio);
+      if (eduList) render(eduList, edu);
     })
     .catch(function () {
       if (gamesList) fail(gamesList);
       if (studioList) fail(studioList);
+      if (eduList) fail(eduList);
     });
 
   // Projects feedback form: toggle + submit to /api/feedback.
