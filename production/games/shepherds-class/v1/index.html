@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Shepherd's Class</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.75rem; }
+      * { box-sizing: border-box; }
+      :root{
+        --bg:#e9efe2; --panel:#ffffff; --ink:#22301f; --ink-soft:#4c5a48;
+        --line:#cfd8c6; --board:#2e5b40; --board-dark:#234632; --wood:#b07a45; --wood-dark:#8a5a2e;
+        --red:#d8402f; --blue:#2f6fd0; --yellow:#e9a900; --gold:#f5b301;
+        --good:#2e9e5b; --bad:#d8402f;
+        --card-shadow:0 4px 14px rgba(30,50,25,.16);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#17211a; --panel:#243128; --ink:#eef4e8; --ink-soft:#b9c8b2;
+          --line:#3a4a3c; --board:#26503a; --board-dark:#1b3a29;
+          --card-shadow:0 4px 14px rgba(0,0,0,.45);
+        }
+      }
+      html,body{ margin:0; padding:0; }
+      body{
+        background:var(--bg); color:var(--ink);
+        font-family:"Nunito", system-ui, sans-serif;
+        -webkit-font-smoothing:antialiased;
+      }
+      h1,h2,h3,.fred{ font-family:"Fredoka","Nunito",sans-serif; }
+      .wrap{ max-width:1180px; margin:0 auto; padding:14px 14px 40px; }
+
+      /* ---------- top bar ---------- */
+      .topbar{
+        display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+        background:var(--panel); border:1px solid var(--line); border-radius:16px;
+        padding:10px 14px; box-shadow:var(--card-shadow);
+      }
+      .topbar h1{ font-size:clamp(22px,4.5vw,32px); margin:0; letter-spacing:.3px; }
+      .topbar h1 .crook-ico{ color:var(--gold); }
+      .stats{ display:flex; flex-wrap:wrap; gap:8px; margin-left:auto; align-items:center; }
+      .pill{
+        background:var(--bg); border:1px solid var(--line); border-radius:999px;
+        padding:6px 12px; font-weight:800; font-size:14px; white-space:nowrap;
+      }
+      .pill b{ font-family:"Fredoka"; font-size:16px; }
+      .icon-btn{
+        border:1px solid var(--line); background:var(--bg); color:var(--ink);
+        border-radius:999px; padding:6px 14px; font-family:inherit; font-weight:800;
+        cursor:pointer; font-size:14px;
+      }
+      .icon-btn:active{ transform:scale(.97); }
+
+      .howto{
+        margin-top:10px; background:var(--panel); border:1px solid var(--line);
+        border-radius:14px; padding:10px 14px; font-size:15px; font-weight:700; color:var(--ink-soft);
+        display:flex; flex-wrap:wrap; gap:6px 18px;
+      }
+      .howto span b{ color:var(--ink); }
+
+      /* ---------- goal bar ---------- */
+      .goal{
+        margin-top:10px; background:var(--panel); border:1px solid var(--line); border-radius:14px;
+        padding:10px 14px;
+      }
+      .goal-row{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-weight:800; font-size:14px; }
+      .goal-track{ height:14px; background:var(--bg); border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-top:6px; }
+      .goal-fill{ height:100%; width:0%; background:repeating-linear-gradient(45deg,var(--gold) 0 14px,#ffc61a 14px 28px); transition:width .5s ease; }
+
+      /* ---------- board + teacher stage ---------- */
+      .stage{
+        margin-top:12px; display:grid; grid-template-columns:1fr 300px; gap:12px; align-items:stretch;
+      }
+      @media (max-width:820px){ .stage{ grid-template-columns:1fr; } }
+      .board{
+        background:linear-gradient(180deg,var(--board) 0%,var(--board-dark) 100%);
+        border:10px solid var(--wood); border-radius:10px;
+        padding:14px; box-shadow:var(--card-shadow); position:relative;
+      }
+      .board h2{ color:#fdfdf5; margin:0 0 4px; font-size:20px; letter-spacing:.4px; }
+      .board .board-sub{ color:#cfe3cf; font-weight:700; font-size:13.5px; margin:0 0 12px; }
+      .filters{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+      .chip{
+        border:2px solid rgba(255,255,255,.35); background:rgba(255,255,255,.1); color:#fff;
+        border-radius:999px; padding:6px 12px; font-family:inherit; font-weight:800; font-size:13.5px; cursor:pointer;
+      }
+      .chip[aria-pressed="true"]{ background:#fff; color:var(--board-dark); border-color:#fff; }
+      .slots{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+      @media (max-width:560px){ .slots{ grid-template-columns:1fr; } }
+      .pcard{
+        background:#fffdf4; color:#26332a; border:none; border-radius:8px; text-align:left;
+        padding:12px 12px 10px; cursor:pointer; font-family:inherit; width:100%;
+        box-shadow:0 3px 0 rgba(0,0,0,.25); position:relative; min-height:118px;
+        display:flex; flex-direction:column; gap:6px;
+      }
+      .pcard::before{
+        content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%);
+        width:14px; height:14px; border-radius:50%; background:var(--gold);
+        box-shadow:0 1px 3px rgba(0,0,0,.4);
+      }
+      .pcard:hover{ transform:translateY(-2px); }
+      .pcard.selected{ outline:4px solid var(--gold); transform:translateY(4px) rotate(-1deg); }
+      .pcard .subj{ display:inline-flex; align-items:center; gap:6px; font-weight:900; font-size:12.5px; text-transform:uppercase; letter-spacing:.6px; }
+      .pcard .type{ font-family:"Fredoka"; font-size:19px; line-height:1.15; }
+      .pcard .tap{ margin-top:auto; font-size:12.5px; font-weight:800; color:#7a6a2f; }
+      .subj-dot{ width:11px; height:11px; border-radius:50%; display:inline-block; flex:none; }
+
+      .teacher-box{
+        background:var(--panel); border:1px solid var(--line); border-radius:16px;
+        padding:12px; box-shadow:var(--card-shadow); display:flex; flex-direction:column; align-items:center;
+      }
+      .teacher-stage{ display:flex; align-items:flex-start; gap:6px; width:100%; }
+      .teacher-svg{ flex:none; }
+      .teacher-svg .crook-arm{ transform-origin:118px 74px; transition:transform .35s ease; }
+      .teacher-svg.pulling .crook-arm{ transform:rotate(-24deg); }
+      .bubble{
+        background:var(--bg); border:1.5px solid var(--line); border-radius:14px; border-bottom-left-radius:4px;
+        padding:9px 11px; font-weight:800; font-size:14.5px; line-height:1.35; flex:1; min-height:64px;
+      }
+      .held{
+        margin-top:10px; width:100%; border:2px dashed var(--line); border-radius:12px; padding:9px 11px;
+        font-weight:800; font-size:14px; text-align:center; color:var(--ink-soft);
+      }
+      .held.full{ border-style:solid; border-color:var(--gold); background:rgba(245,179,1,.12); color:var(--ink); }
+
+      /* ---------- classroom ---------- */
+      .classroom{
+        margin-top:14px; background:linear-gradient(180deg, transparent 0, rgba(176,122,69,.10) 100%);
+        display:grid; grid-template-columns:1fr 1fr; gap:12px;
+      }
+      @media (max-width:820px){ .classroom{ grid-template-columns:1fr; } }
+      .block{
+        background:var(--panel); border:1px solid var(--line); border-radius:16px;
+        padding:12px; box-shadow:var(--card-shadow);
+      }
+      .block-label{ font-family:"Fredoka"; font-weight:600; font-size:16px; margin:0 0 10px; display:flex; justify-content:space-between; align-items:center;}
+      .block-label .pen{ font-size:12px; font-family:"Nunito"; font-weight:900; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.7px; }
+      .pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      .tabletop{
+        height:26px; margin:8px 4px; border-radius:6px;
+        background:repeating-linear-gradient(90deg,var(--wood) 0 46px,var(--wood-dark) 46px 48px);
+        box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff8ec; font-size:11.5px; font-weight:900; letter-spacing:1.5px; text-transform:uppercase;
+        text-shadow:0 1px 2px rgba(0,0,0,.35);
+      }
+      .student{
+        border:2px solid var(--line); background:var(--bg); border-radius:14px; cursor:pointer;
+        font-family:inherit; color:var(--ink); padding:8px 6px 7px; width:100%;
+        display:flex; flex-direction:column; align-items:center; gap:2px; position:relative;
+        transition:border-color .15s, transform .15s;
+      }
+      .pair.south .student{ flex-direction:column-reverse; }
+      .student:hover{ border-color:var(--gold); }
+      .student:active{ transform:scale(.97); }
+      .student .sname{ font-family:"Fredoka"; font-weight:600; font-size:16.5px; line-height:1.1; }
+      .student .fav{ font-size:11.5px; font-weight:900; display:inline-flex; align-items:center; gap:5px; color:var(--ink-soft); }
+      .student .stars{ font-size:12.5px; min-height:16px; letter-spacing:1px; color:var(--gold); }
+      .student.done-flash{ border-color:var(--good); }
+      .student .burst{ position:absolute; inset:0; pointer-events:none; }
+      .burst i{
+        position:absolute; left:50%; top:38%; font-style:normal; font-size:17px;
+        animation:burstFly .8s ease-out forwards;
+      }
+      @keyframes burstFly{
+        0%{ transform:translate(-50%,-50%) scale(.5); opacity:1; }
+        100%{ transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.25); opacity:0; }
+      }
+
+      /* ---------- solve sheet ---------- */
+      .overlay{
+        position:fixed; inset:0; background:rgba(18,26,18,.55); z-index:40;
+        display:none; align-items:flex-end; justify-content:center; padding:0;
+      }
+      .overlay.open{ display:flex; }
+      @media (min-width:700px){ .overlay{ align-items:center; padding:18px; } }
+      .sheet{
+        background:var(--panel); color:var(--ink); width:100%; max-width:560px; max-height:92dvh; overflow:auto;
+        border-radius:20px 20px 0 0; padding:20px 18px 22px; box-shadow:0 -8px 40px rgba(0,0,0,.35);
+      }
+      @media (min-width:700px){ .sheet{ border-radius:20px; } }
+      .sheet .for{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+      .sheet .for .who{ font-weight:900; font-size:15px; }
+      .sheet .match-note{ font-size:13px; font-weight:900; color:#9a6b00; }
+      @media (prefers-color-scheme: dark){ .sheet .match-note{ color:var(--gold); } }
+      .sheet h3{ font-size:clamp(20px,5vw,26px); line-height:1.3; margin:8px 0 16px; font-weight:600; }
+      .choices{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      @media (max-width:430px){ .choices{ grid-template-columns:1fr; } }
+      .choice{
+        border:2px solid var(--line); background:var(--bg); color:var(--ink); border-radius:12px;
+        padding:13px 12px; font-family:inherit; font-weight:900; font-size:17px; cursor:pointer; text-align:center;
+      }
+      .choice:hover{ border-color:var(--gold); }
+      .choice.right{ border-color:var(--good); background:rgba(46,158,91,.16); }
+      .choice.wrong{ border-color:var(--bad); background:rgba(216,64,47,.12); opacity:.75; }
+      .choice[disabled]{ cursor:default; }
+      .feedback{ margin-top:14px; font-weight:900; font-size:16px; min-height:24px; text-align:center; }
+      .feedback.good{ color:var(--good); } .feedback.bad{ color:var(--bad); }
+      .hint{ margin-top:6px; text-align:center; font-weight:700; color:var(--ink-soft); font-size:14.5px; min-height:20px; }
+      .sheet .close-row{ margin-top:14px; text-align:center; }
+      .btn{
+        border:none; border-radius:999px; padding:11px 22px; font-family:"Fredoka"; font-weight:600;
+        font-size:16px; cursor:pointer; background:var(--board); color:#fff;
+      }
+      .btn.gold{ background:var(--gold); color:#3a2a00; }
+      .btn.ghost{ background:transparent; color:var(--ink-soft); border:2px solid var(--line); }
+
+      .celebrate{
+        position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center;
+        background:rgba(18,26,18,.6); padding:18px;
+      }
+      .celebrate.open{ display:flex; }
+      .celebrate .card{
+        background:var(--panel); color:var(--ink); border-radius:20px; padding:26px 22px; max-width:440px; text-align:center;
+        box-shadow:0 12px 50px rgba(0,0,0,.4);
+      }
+      .celebrate h2{ margin:0 0 8px; font-size:28px; }
+      .celebrate p{ font-weight:700; color:var(--ink-soft); line-height:1.45; }
+      .celebrate .big-stars{ font-size:34px; letter-spacing:4px; }
+
+      .shake{ animation:shake .4s ease; }
+      @keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+      @media (prefers-reduced-motion: reduce){
+        *{ animation:none !important; transition:none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <h1><span class="crook-ico">🪝</span> Shepherd's Class</h1>
+        <div class="stats">
+          <span class="pill">⭐ Score <b id="statScore">0</b></span>
+          <span class="pill">✏️ Solved <b id="statSolved">0</b></span>
+          <span class="pill">🔥 Streak <b id="statStreak">0</b></span>
+          <button class="icon-btn" id="soundBtn" type="button" aria-pressed="true">🔊 Sound on</button>
+        </div>
+      </header>
+
+      <div class="howto" aria-label="How to play">
+        <span><b>1.</b> Tap a problem card on the board</span>
+        <span><b>2.</b> Miss Shepherd pulls it down with her crook</span>
+        <span><b>3.</b> Tap a student to hand it to</span>
+        <span><b>4.</b> Help them solve it and earn stars!</span>
+      </div>
+
+      <div class="goal">
+        <div class="goal-row"><span>🏆 Class Star Chart</span><span id="goalText">0 / 24 stars to the class party</span></div>
+        <div class="goal-track"><div class="goal-fill" id="goalFill"></div></div>
+      </div>
+
+      <section class="stage">
+        <div class="board" id="board">
+          <h2>📋 The Problem Board</h2>
+          <p class="board-sub">Pick the kind of problems you want, then tap a card to pull it down.</p>
+          <div class="filters" id="filters" role="group" aria-label="Problem kinds"></div>
+          <div class="slots" id="slots"></div>
+        </div>
+
+        <aside class="teacher-box" aria-label="Teacher">
+          <div class="teacher-stage">
+            <!-- Miss Shepherd: petite teacher, mid-back blonde hair, blue checked dress, shepherd's crook -->
+            <svg class="teacher-svg" id="teacherSvg" width="118" height="196" viewBox="0 0 140 210" role="img" aria-label="Miss Shepherd, the teacher, holding her shepherd's crook">
+              <defs>
+                <pattern id="gingham" width="12" height="12" patternUnits="userSpaceOnUse">
+                  <rect width="12" height="12" fill="#fdfdff"/>
+                  <rect width="12" height="6" fill="rgba(47,111,208,.45)"/>
+                  <rect width="6" height="12" fill="rgba(47,111,208,.45)"/>
+                </pattern>
+              </defs>
+              <!-- long blonde hair, down to mid-back -->
+              <path d="M46 22 C30 30 28 70 32 118 L44 122 L46 60 Z" fill="#eec95c"/>
+              <path d="M94 22 C110 30 112 70 108 118 L96 122 L94 60 Z" fill="#eec95c"/>
+              <path d="M44 14 C44 4 96 4 96 14 L96 34 C80 24 60 24 44 34 Z" fill="#f4d878"/>
+              <!-- legs & shoes -->
+              <rect x="58" y="168" width="9" height="26" rx="4" fill="#ffdfc4"/>
+              <rect x="74" y="168" width="9" height="26" rx="4" fill="#ffdfc4"/>
+              <ellipse cx="61" cy="198" rx="9" ry="4.5" fill="#7a4a21"/>
+              <ellipse cx="80" cy="198" rx="9" ry="4.5" fill="#7a4a21"/>
+              <!-- blue checked dress -->
+              <path d="M54 62 L86 62 L98 172 L42 172 Z" fill="url(#gingham)" stroke="#2f6fd0" stroke-width="1.5"/>
+              <path d="M54 62 L86 62 L89 84 L51 84 Z" fill="url(#gingham)" stroke="#2f6fd0" stroke-width="1.5"/>
+              <rect x="50" y="106" width="40" height="7" fill="#2f6fd0"/>
+              <!-- left arm down -->
+              <path d="M52 66 C40 84 38 102 42 116" fill="none" stroke="#ffdfc4" stroke-width="9" stroke-linecap="round"/>
+              <!-- head -->
+              <circle cx="70" cy="38" r="21" fill="#ffdfc4"/>
+              <path d="M49 36 C49 14 91 14 91 36 C84 24 56 24 49 36 Z" fill="#f4d878"/>
+              <circle cx="63" cy="40" r="2.2" fill="#26332a"/>
+              <circle cx="77" cy="40" r="2.2" fill="#26332a"/>
+              <path d="M64 49 Q70 54 76 49" fill="none" stroke="#c46a5a" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="55" cy="46" r="3.4" fill="#f6b8a0" opacity=".7"/>
+              <circle cx="85" cy="46" r="3.4" fill="#f6b8a0" opacity=".7"/>
+              <!-- right arm + crook -->
+              <g class="crook-arm">
+                <path d="M88 66 C100 78 106 84 112 88" fill="none" stroke="#ffdfc4" stroke-width="9" stroke-linecap="round"/>
+                <path d="M114 196 L114 34 C114 20 96 18 94 30 C93 38 101 40 103 34" fill="none" stroke="#8a5a2e" stroke-width="5.5" stroke-linecap="round"/>
+              </g>
+            </svg>
+            <div class="bubble" id="speech">Welcome to Shepherd's Class! Tap a problem card on the board and I'll pull it down with my crook. 🐑</div>
+          </div>
+          <div class="held" id="heldTray">Miss Shepherd's hands are empty — pull a problem down first!</div>
+        </aside>
+      </section>
+
+      <main class="classroom" id="classroom" aria-label="Classroom desks"></main>
+    </div>
+
+    <!-- solve sheet -->
+    <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="qText">
+      <div class="sheet">
+        <div class="for">
+          <span id="forAvatar"></span>
+          <div>
+            <div class="who" id="forWho"></div>
+            <div class="match-note" id="matchNote"></div>
+          </div>
+        </div>
+        <div class="pill" id="qTag" style="display:inline-block"></div>
+        <h3 id="qText"></h3>
+        <div class="choices" id="choices"></div>
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+        <div class="hint" id="hint"></div>
+        <div class="close-row">
+          <button class="btn ghost" id="putBackBtn" type="button">Put it back on the board</button>
+          <button class="btn gold" id="nextBtn" type="button" style="display:none">Hand out the next one ➜</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- celebration -->
+    <div class="celebrate" id="celebrate">
+      <div class="card">
+        <div class="big-stars">⭐⭐⭐</div>
+        <h2>Class Party Time! 🎉</h2>
+        <p id="celebrateText">The class filled the whole star chart. Miss Shepherd is so proud of her flock — every student worked hard and learned something new!</p>
+        <button class="btn gold" id="keepGoingBtn" type="button">Keep learning ➜</button>
+      </div>
+    </div>
+
+    <script>
+    "use strict";
+    /* ================= data ================= */
+    var SUBJECTS = {
+      math:    { label:"Math",            icon:"➕", color:"#2f6fd0" },
+      words:   { label:"Words & Reading", icon:"📖", color:"#d8402f" },
+      science: { label:"Science",         icon:"🔬", color:"#2e9e5b" },
+      logic:   { label:"Logic & Puzzles", icon:"🧩", color:"#8a4fb5" },
+      geo:     { label:"Geography",       icon:"🗺️", color:"#e07b1f" },
+      bible:   { label:"Bible",           icon:"✝️", color:"#b8860b" }
+    };
+
+    /* Each problem: s subject, t type, q question, c choices, a correct index, h hint */
+    var PROBLEMS = [
+      /* ---- MATH ---- */
+      {s:"math",t:"Addition",q:"What is 47 + 28?",c:["65","75","85","71"],a:1,h:"Add the ones first: 7 + 8 = 15. Carry the 1!"},
+      {s:"math",t:"Subtraction",q:"What is 92 − 37?",c:["45","55","65","54"],a:1,h:"Borrow from the 9: 12 − 7 = 5, then 8 − 3 = 5."},
+      {s:"math",t:"Multiplication",q:"What is 7 × 8?",c:["54","56","48","64"],a:1,h:"Count by 7s eight times: 7, 14, 21, 28…"},
+      {s:"math",t:"Division",q:"What is 36 ÷ 6?",c:["4","5","6","8"],a:2,h:"Think: 6 times what number makes 36?"},
+      {s:"math",t:"Fractions",q:"What is ½ of 12?",c:["4","6","8","12"],a:1,h:"Split 12 into two equal groups."},
+      {s:"math",t:"Telling Time",q:"The hour hand is just past 4 and the minute hand points at the 6. What time is it?",c:["4:06","4:30","6:20","4:45"],a:1,h:"The minute hand on 6 means half past the hour."},
+      {s:"math",t:"Counting Money",q:"Two quarters and one dime are worth how much?",c:["35¢","50¢","60¢","75¢"],a:2,h:"A quarter is 25¢ and a dime is 10¢."},
+      {s:"math",t:"Number Patterns",q:"What number comes next? 3, 6, 9, 12, ___",c:["13","14","15","18"],a:2,h:"We are counting by 3s."},
+      {s:"math",t:"Word Problems",q:"Sara has 5 bags with 4 marbles in each bag. How many marbles does she have in all?",c:["9","16","20","24"],a:2,h:"5 groups of 4 — that's multiplication!"},
+      {s:"math",t:"Multiplication",q:"What is 9 × 6?",c:["52","54","56","63"],a:1,h:"9 × 6 is the same as 10 × 6 minus 6."},
+      {s:"math",t:"Fractions",q:"A pizza is cut into 4 equal slices. You eat 1 slice. What fraction of the pizza did you eat?",c:["½","⅓","¼","⅛"],a:2,h:"One slice out of four equal slices."},
+      {s:"math",t:"Word Problems",q:"24 cookies are shared equally among 4 friends. How many cookies does each friend get?",c:["4","5","6","8"],a:2,h:"24 split into 4 equal groups."},
+      /* ---- WORDS & READING ---- */
+      {s:"words",t:"Spelling",q:"Which word is spelled correctly?",c:["becuse","because","becaus","becawse"],a:1,h:"Say it slowly: be-cause."},
+      {s:"words",t:"Rhyming",q:"Which word rhymes with “cat”?",c:["dog","hat","sun","pig"],a:1,h:"Rhyming words end with the same sound: -at."},
+      {s:"words",t:"Opposites",q:"What is the opposite of “hot”?",c:["warm","cold","big","fast"],a:1,h:"Think of ice and snow."},
+      {s:"words",t:"Same Meaning",q:"“Glad” means the same as…",c:["sad","happy","tired","angry"],a:1,h:"You feel glad when something good happens."},
+      {s:"words",t:"Missing Letters",q:"C _ T — it is a pet that says “meow.” Which letter is missing?",c:["E","A","O","U"],a:1,h:"It starts like “cat”!"},
+      {s:"words",t:"Sight Words",q:"Which word completes the sentence? “___ sun is bright today.”",c:["A","The","And","It"],a:1,h:"It names one special sun — our sun."},
+      {s:"words",t:"Sentence Order",q:"Which sentence has its words in the right order?",c:["Ran the fast dog.","The dog ran fast.","Dog fast the ran.","Fast ran dog the."],a:1,h:"A sentence starts with who or what, then what they did."},
+      {s:"words",t:"Rhyming",q:"Which word rhymes with “sun”?",c:["moon","fun","sand","top"],a:1,h:"Listen for the -un sound at the end."},
+      {s:"words",t:"Opposites",q:"What is the opposite of “up”?",c:["over","down","high","top"],a:1,h:"Balloons go up… and then come back ___."},
+      {s:"words",t:"Missing Letters",q:"B _ _ K — it is something you read. Which two letters are missing?",c:["EE","OO","AA","II"],a:1,h:"It rhymes with “look” and “cook.”"},
+      {s:"words",t:"Spelling",q:"Which word is spelled correctly?",c:["freind","friend","frend","friende"],a:1,h:"Remember: “i before e” in this word — fr-i-end."},
+      /* ---- SCIENCE ---- */
+      {s:"science",t:"Animal Groups",q:"A frog is which kind of animal?",c:["A mammal","A bird","An amphibian","A fish"],a:2,h:"Frogs start in water and can live on land too."},
+      {s:"science",t:"Parts of a Plant",q:"Which part of a plant makes food from sunlight?",c:["The roots","The stem","The leaves","The flower"],a:2,h:"They are the plant's green “kitchens.”"},
+      {s:"science",t:"Seasons",q:"In which season do leaves change color and fall from the trees?",c:["Spring","Summer","Autumn (fall)","Winter"],a:2,h:"It comes right after summer."},
+      {s:"science",t:"Planets",q:"Which planet is called the Red Planet?",c:["Venus","Mars","Jupiter","Saturn"],a:1,h:"Its dusty rocks make it look red."},
+      {s:"science",t:"Life Cycles",q:"A caterpillar changes into a…",c:["Bee","Butterfly","Spider","Worm"],a:1,h:"It happens inside a chrysalis."},
+      {s:"science",t:"What Animals Eat",q:"What does a cow mostly eat?",c:["Meat","Grass","Fish","Bugs"],a:1,h:"Cows are plant-eaters that graze in fields."},
+      {s:"science",t:"Animal Groups",q:"A whale is which kind of animal?",c:["A fish","A mammal","An amphibian","A reptile"],a:1,h:"Whales breathe air and feed milk to their babies."},
+      {s:"science",t:"Planets",q:"Which planet is closest to the Sun?",c:["Venus","Earth","Mercury","Mars"],a:2,h:"It is the smallest planet and zips around the Sun fastest."},
+      {s:"science",t:"Parts of a Plant",q:"Which part of a plant holds it in the ground and drinks up water?",c:["The roots","The petals","The leaves","The fruit"],a:0,h:"They grow down under the soil."},
+      {s:"science",t:"Seasons",q:"In which season does snow usually fall?",c:["Spring","Summer","Autumn","Winter"],a:3,h:"It is the coldest season of the year."},
+      {s:"science",t:"Life Cycles",q:"A tadpole grows up into a…",c:["Fish","Frog","Duck","Snake"],a:1,h:"It loses its tail and grows legs."},
+      /* ---- LOGIC & PUZZLES ---- */
+      {s:"logic",t:"Odd One Out",q:"Which one does not belong? Dog, cat, fish, car",c:["Dog","Cat","Fish","Car"],a:3,h:"Three of them are alive. One is a machine."},
+      {s:"logic",t:"Patterns",q:"What comes next in the pattern? 🔴 🔵 🔴 🔵 🔴 ___",c:["🔴","🔵","🟢","🟡"],a:1,h:"The colors take turns: red, blue, red, blue…"},
+      {s:"logic",t:"Riddles",q:"Riddle: What has keys but can't open a single lock?",c:["A door","A piano","A map","A book"],a:1,h:"You play music on it."},
+      {s:"logic",t:"Sorting",q:"Which one belongs in the fruit group?",c:["Carrot","Banana","Potato","Onion"],a:1,h:"The others are vegetables."},
+      {s:"logic",t:"Odd One Out",q:"Which one does not belong? Apple, orange, banana, bread",c:["Apple","Orange","Banana","Bread"],a:3,h:"Three grow on trees or plants as fruit."},
+      {s:"logic",t:"Patterns",q:"What number comes next? 5, 10, 15, 20, ___",c:["21","22","25","30"],a:2,h:"Count by 5s."},
+      {s:"logic",t:"Riddles",q:"Riddle: What has a face and two hands but no arms and no legs?",c:["A doll","A clock","A scarecrow","A robot"],a:1,h:"It tells you the time."},
+      {s:"logic",t:"Memory Pairs",q:"You turned over four cards: Dog, Sun, Dog, Tree. Which card made a matching pair?",c:["Sun","Tree","Dog","None of them"],a:2,h:"A pair means the same picture twice."},
+      {s:"logic",t:"Sorting",q:"Which one belongs with things that can fly?",c:["Fish","Bird","Frog","Snake"],a:1,h:"Only one of them has wings and feathers."},
+      {s:"logic",t:"Odd One Out",q:"Which one does not belong? Circle, square, triangle, banana",c:["Circle","Square","Triangle","Banana"],a:3,h:"Three of them are shapes."},
+      /* ---- GEOGRAPHY ---- */
+      {s:"geo",t:"Continents",q:"Which is the largest continent on Earth?",c:["Africa","Asia","Europe","Australia"],a:1,h:"China and India are both part of it."},
+      {s:"geo",t:"State Capitals",q:"What is the capital of Texas?",c:["Houston","Dallas","Austin","El Paso"],a:2,h:"It starts with A and is known for music."},
+      {s:"geo",t:"Flags",q:"Which country's flag is known as the Stars and Stripes?",c:["Canada","United States","Mexico","Brazil"],a:1,h:"It has 50 stars — one for each state."},
+      {s:"geo",t:"Where Animals Live",q:"Kangaroos live in the wild in…",c:["Africa","Australia","Canada","China"],a:1,h:"Koalas live in the same country."},
+      {s:"geo",t:"Maps",q:"On most maps, which direction is at the top?",c:["South","East","North","West"],a:2,h:"Remember: “Never Eat Soggy Waffles” goes clockwise from the top."},
+      {s:"geo",t:"State Capitals",q:"What is the capital of Oklahoma?",c:["Tulsa","Norman","Oklahoma City","Stillwater"],a:2,h:"The city and the state share part of their name."},
+      {s:"geo",t:"Continents",q:"Egypt is on which continent?",c:["Asia","Africa","Europe","South America"],a:1,h:"The pyramids stand there, near the Nile River."},
+      {s:"geo",t:"Where Animals Live",q:"Penguins live near…",c:["The desert","The South Pole","The jungle","The forest"],a:1,h:"They swim in icy water at the bottom of the world."},
+      {s:"geo",t:"Maps",q:"The sun rises in the…",c:["North","South","East","West"],a:2,h:"And it sets in the west."},
+      {s:"geo",t:"Flags",q:"Which country's flag has a red maple leaf in the middle?",c:["Mexico","Canada","Japan","France"],a:1,h:"This country is the United States' neighbor to the north."},
+      {s:"geo",t:"State Capitals",q:"What is the capital of California?",c:["Los Angeles","San Diego","Sacramento","San Francisco"],a:2,h:"It starts with S and sits on a river in northern California."},
+      /* ---- BIBLE ---- */
+      {s:"bible",t:"Who Did What",q:"Who built the ark to save his family and the animals from the flood?",c:["Moses","Noah","David","Jonah"],a:1,h:"God told him to build a great big boat."},
+      {s:"bible",t:"Who Did What",q:"Who defeated the giant Goliath with a sling and a stone?",c:["Samson","King Saul","David","Peter"],a:2,h:"He was a young shepherd boy — just like our class theme!"},
+      {s:"bible",t:"Story Order",q:"What did God create on the very first day?",c:["Animals","Light","People","Plants"],a:1,h:"“Let there be ___!”"},
+      {s:"bible",t:"Memory Verses",q:"Finish the verse: “In the beginning God created the heavens and the ___.” (Genesis 1:1)",c:["Sea","Earth","Stars","Moon"],a:1,h:"It's the ground we stand on."},
+      {s:"bible",t:"Books of the Bible",q:"What is the very first book of the Bible?",c:["Exodus","Psalms","Genesis","Matthew"],a:2,h:"Its name means “beginning.”"},
+      {s:"bible",t:"Who Did What",q:"Who was swallowed by a great fish after running away from God?",c:["Jonah","Paul","John","Noah"],a:0,h:"He spent three days inside the fish, then obeyed God."},
+      {s:"bible",t:"Who Did What",q:"Who led God's people out of Egypt and through the Red Sea?",c:["Aaron","Moses","Joshua","Abraham"],a:1,h:"God parted the sea so they could walk through on dry ground."},
+      {s:"bible",t:"Memory Verses",q:"Finish the verse: “The Lord is my ___; I shall not want.” (Psalm 23:1)",c:["King","Shepherd","Friend","Rock"],a:1,h:"It's the one who guides and cares for the sheep — our class verse!"},
+      {s:"bible",t:"Books of the Bible",q:"Which book of the Bible is full of songs and poems to God?",c:["Genesis","Psalms","Jonah","Acts"],a:1,h:"King David wrote many of them."},
+      {s:"bible",t:"Story Order",q:"Which of these happened FIRST in the Bible?",c:["Noah builds the ark","David fights Goliath","Jesus is born","God creates the world"],a:3,h:"It is the very beginning of the whole Bible."},
+      {s:"bible",t:"Memory Verses",q:"Finish the verse: “Be kind to one ___.” (Ephesians 4:32)",c:["Another","Friend","Teacher","Brother"],a:0,h:"It means every other person."}
+    ];
+
+    /* 16 students — primary-color clothes, each with a favorite subject */
+    var SKIN = ["#ffdfc4","#f1c27d","#e0ac69","#c68642","#8d5524","#ffdfc4","#e0ac69","#f1c27d"];
+    var HAIRC = ["#2b2b2b","#6b4423","#a9742c","#e8c766","#3a2a1a","#8a4b1f","#20242a","#b3712c"];
+    var SHIRTS = ["#d8402f","#2f6fd0","#e9a900"]; /* red, blue, yellow */
+    var STUDENTS = [
+      {name:"Emma", gender:"girl", fav:"words",   block:0},{name:"Liam", gender:"boy",  fav:"math",    block:0},
+      {name:"Ava",  gender:"girl", fav:"science", block:0},{name:"Noah", gender:"boy",  fav:"bible",   block:0},
+      {name:"Mia",  gender:"girl", fav:"geo",     block:1},{name:"Ben",  gender:"boy",  fav:"logic",   block:1},
+      {name:"Zoe",  gender:"girl", fav:"math",    block:1},{name:"Eli",  gender:"boy",  fav:"words",   block:1},
+      {name:"Ruby", gender:"girl", fav:"science", block:2},{name:"Sam",  gender:"boy",  fav:"geo",     block:2},
+      {name:"Ivy",  gender:"girl", fav:"bible",   block:2},{name:"Luke", gender:"boy",  fav:"logic",   block:2},
+      {name:"Ella", gender:"girl", fav:"math",    block:3},{name:"Max",  gender:"boy",  fav:"science", block:3},
+      {name:"Nora", gender:"girl", fav:"words",   block:3},{name:"Finn", gender:"boy",  fav:"bible",   block:3}
+    ];
+    var BLOCKS = [
+      {label:"Table 1", pen:"Sunny Field Pen"},
+      {label:"Table 2", pen:"Green Meadow Pen"},
+      {label:"Table 3", pen:"River Bend Pen"},
+      {label:"Table 4", pen:"Hilltop Pen"}
+    ];
+
+    function avatarSVG(i, size){
+      var skin = SKIN[i % SKIN.length], hair = HAIRC[i % HAIRC.length];
+      var shirt = SHIRTS[i % SHIRTS.length];
+      var isGirl = STUDENTS[i] && STUDENTS[i].gender === "girl";
+      /* Vary the cut within each gender so kids don't all look the same:
+         boys rotate through 4 short cuts, girls through 4 long cuts. */
+      var variant = Math.floor(i / 2) % 4;
+      var hairBack = "", hairShape = "";
+      if (!isGirl){
+        /* ---- BOY haircuts: all short, nothing below the ears ---- */
+        if (variant === 0){ /* neat short cap */
+          hairShape = '<path d="M15 26 C15 11 45 11 45 26 C38 18 22 18 15 26 Z" fill="'+hair+'"/>';
+        } else if (variant === 1){ /* short crop with a side part */
+          hairShape = '<path d="M15 25 C15 10 45 10 45 24 C40 17 28 16 15 25 Z" fill="'+hair+'"/><path d="M36 13 C34 17 33 20 33 23" fill="none" stroke="'+skin+'" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>';
+        } else if (variant === 2){ /* short curly top — curls only on top */
+          hairShape = '<circle cx="20" cy="18" r="5" fill="'+hair+'"/><circle cx="27" cy="14" r="5.5" fill="'+hair+'"/><circle cx="34" cy="14" r="5.5" fill="'+hair+'"/><circle cx="40" cy="18" r="5" fill="'+hair+'"/><rect x="17" y="16" width="26" height="7" rx="3.5" fill="'+hair+'"/>';
+        } else { /* short spiky top */
+          hairShape = '<path d="M15 26 L17 16 L22 20 L25 12 L29 19 L33 12 L37 19 L41 14 L44 21 L45 26 C38 18 22 18 15 26 Z" fill="'+hair+'"/>';
+        }
+      } else {
+        /* ---- GIRL haircuts: all long or tied up, clearly past the ears ---- */
+        if (variant === 0){ /* long straight hair down both sides */
+          hairBack = '<path d="M13 22 C13 8 47 8 47 22 L48 48 C48 51 42 51 41 47 L41 28 L19 28 L19 47 C18 51 12 51 12 48 Z" fill="'+hair+'"/>';
+          hairShape = '<path d="M14 25 C14 10 46 10 46 25 C38 17 22 17 14 25 Z" fill="'+hair+'"/>';
+        } else if (variant === 1){ /* long hair with a high ponytail */
+          hairBack = '<path d="M13 22 C13 8 47 8 47 22 L47 42 L41 42 L41 26 C34 19 26 19 19 26 L19 42 L13 42 Z" fill="'+hair+'"/>';
+          hairShape = '<path d="M14 25 C14 10 46 10 46 25 C38 17 22 17 14 25 Z" fill="'+hair+'"/><circle cx="46" cy="13" r="5.5" fill="'+hair+'"/><path d="M46 16 C50 22 50 30 47 36" fill="none" stroke="'+hair+'" stroke-width="5" stroke-linecap="round"/>';
+        } else if (variant === 2){ /* long curly hair down both sides */
+          hairBack = '<circle cx="14" cy="28" r="5.5" fill="'+hair+'"/><circle cx="13" cy="37" r="5" fill="'+hair+'"/><circle cx="15" cy="45" r="4.5" fill="'+hair+'"/><circle cx="46" cy="28" r="5.5" fill="'+hair+'"/><circle cx="47" cy="37" r="5" fill="'+hair+'"/><circle cx="45" cy="45" r="4.5" fill="'+hair+'"/>';
+          hairShape = '<circle cx="18" cy="19" r="6" fill="'+hair+'"/><circle cx="26" cy="14" r="6.5" fill="'+hair+'"/><circle cx="34" cy="14" r="6.5" fill="'+hair+'"/><circle cx="42" cy="19" r="6" fill="'+hair+'"/>';
+        } else { /* two pigtails */
+          hairBack = '<circle cx="13" cy="30" r="5" fill="'+hair+'"/><path d="M13 32 C10 38 10 44 13 48" fill="none" stroke="'+hair+'" stroke-width="5" stroke-linecap="round"/><circle cx="47" cy="30" r="5" fill="'+hair+'"/><path d="M47 32 C50 38 50 44 47 48" fill="none" stroke="'+hair+'" stroke-width="5" stroke-linecap="round"/>';
+          hairShape = '<path d="M14 25 C14 10 46 10 46 25 C38 17 22 17 14 25 Z" fill="'+hair+'"/>';
+        }
+      }
+      return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 60 60" aria-hidden="true">'
+        + hairBack
+        + '<path d="M10 60 C10 46 22 42 30 42 C38 42 50 46 50 60 Z" fill="'+shirt+'"/>'
+        + '<rect x="26" y="36" width="8" height="8" rx="3" fill="'+skin+'"/>'
+        + '<circle cx="30" cy="27" r="14" fill="'+skin+'"/>'
+        + hairShape
+        + '<circle cx="25" cy="28" r="1.7" fill="#26332a"/><circle cx="35" cy="28" r="1.7" fill="#26332a"/>'
+        + '<path d="M26 34 Q30 37 34 34" fill="none" stroke="#c46a5a" stroke-width="1.8" stroke-linecap="round"/>'
+        + '</svg>';
+    }
+
+    /* ================= state ================= */
+    var GOAL = 24;
+    var state = {
+      score:0, solved:0, streak:0, filter:"all",
+      board:[null,null,null], held:null, heldSlot:-1,
+      current:null, currentStudent:-1, sound:true, celebrated:false,
+      stars:{}
+    };
+    STUDENTS.forEach(function(_,i){ state.stars[i]=0; });
+
+    var $ = function(id){ return document.getElementById(id); };
+    var speechEl=$("speech"), heldEl=$("heldTray"), slotsEl=$("slots"), teacherSvg=$("teacherSvg");
+
+    function say(text){ speechEl.textContent = text; }
+
+    /* ================= sound ================= */
+    var actx = null;
+    function tone(freq, dur, delay){
+      if (!state.sound) return;
+      try{
+        actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+        if (actx.state === "suspended") actx.resume();
+        var o = actx.createOscillator(), g = actx.createGain();
+        var t = actx.currentTime + (delay||0);
+        o.frequency.value = freq; o.type = "sine";
+        g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur);
+      }catch(e){}
+    }
+    function goodSound(){ tone(660,.15,0); tone(880,.22,.12); }
+    function pullSound(){ tone(420,.12,0); tone(540,.12,.09); }
+
+    /* ================= board ================= */
+    function pool(){
+      return PROBLEMS.filter(function(p){ return state.filter==="all" || p.s===state.filter; });
+    }
+    function randomProblem(exclude){
+      var p = pool(), guard = 0, cand;
+      do { cand = p[Math.floor(Math.random()*p.length)]; guard++; }
+      while (exclude.indexOf(cand) !== -1 && guard < 40);
+      return cand;
+    }
+    function dealBoard(){
+      var used = [];
+      for (var i=0;i<3;i++){ state.board[i] = randomProblem(used); used.push(state.board[i]); }
+      renderBoard();
+    }
+    function renderBoard(){
+      slotsEl.innerHTML = "";
+      state.board.forEach(function(p, i){
+        if (!p){ slotsEl.appendChild(document.createElement("div")); return; }
+        var s = SUBJECTS[p.s];
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "pcard" + (state.held===p ? " selected" : "");
+        b.setAttribute("aria-label", s.label + " problem: " + p.t + ". Tap to pull it down.");
+        b.innerHTML = '<span class="subj"><span class="subj-dot" style="background:'+s.color+'"></span>'+s.icon+" "+s.label+'</span>'
+          + '<span class="type">'+p.t+'</span>'
+          + '<span class="tap">🪝 Tap — Miss Shepherd will pull it down</span>';
+        b.addEventListener("click", function(){ pullDown(i); });
+        slotsEl.appendChild(b);
+      });
+    }
+    function renderHeld(){
+      if (state.held){
+        var s = SUBJECTS[state.held.s];
+        heldEl.className = "held full";
+        heldEl.textContent = "📄 In her hand: " + s.label + " — " + state.held.t + ". Now tap a student!";
+      } else {
+        heldEl.className = "held";
+        heldEl.textContent = "Miss Shepherd's hands are empty — pull a problem down first!";
+      }
+    }
+    function pullDown(i){
+      var p = state.board[i];
+      if (!p) return;
+      if (state.held === p){ /* tapping again puts it back */
+        state.held = null; state.heldSlot = -1;
+        say("Okay, that one goes back on the board. Pick another card — or the same one when you're ready!");
+        renderBoard(); renderHeld(); return;
+      }
+      state.held = p; state.heldSlot = i;
+      teacherSvg.classList.add("pulling"); pullSound();
+      setTimeout(function(){ teacherSvg.classList.remove("pulling"); }, 420);
+      var s = SUBJECTS[p.s];
+      say("Got it! A " + s.label + " problem — " + p.t + ". Now tap the student you want to give it to. ⭐ means it's their favorite!");
+      renderBoard(); renderHeld();
+    }
+
+    /* ================= classroom ================= */
+    function buildClassroom(){
+      var room = $("classroom"); room.innerHTML = "";
+      BLOCKS.forEach(function(blk, bi){
+        var div = document.createElement("section");
+        div.className = "block";
+        div.innerHTML = '<h3 class="block-label">'+blk.label+' <span class="pen">🐑 '+blk.pen+'</span></h3>';
+        var kids = STUDENTS.map(function(st,i){ return {st:st,i:i}; }).filter(function(k){ return k.st.block===bi; });
+        var north = document.createElement("div"); north.className = "pair north";
+        var table = document.createElement("div"); table.className = "tabletop"; table.textContent = "desks face each other";
+        var south = document.createElement("div"); south.className = "pair south";
+        kids.forEach(function(k, idx){
+          var btn = studentButton(k.i);
+          if (idx < 2) north.appendChild(btn); else south.appendChild(btn);
+        });
+        div.appendChild(north); div.appendChild(table); div.appendChild(south);
+        room.appendChild(div);
+      });
+    }
+    function studentButton(i){
+      var st = STUDENTS[i], fav = SUBJECTS[st.fav];
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "student"; b.id = "student-"+i;
+      b.setAttribute("aria-label", st.name + ", " + (st.gender === "girl" ? "girl" : "boy") + ". Favorite subject: " + fav.label + ".");
+      b.innerHTML = avatarSVG(i, 56)
+        + '<span class="sname">'+st.name+'</span>'
+        + '<span class="fav"><span class="subj-dot" style="background:'+fav.color+'"></span>⭐ '+fav.label+'</span>'
+        + '<span class="stars" id="stars-'+i+'"></span>'
+        + '<span class="burst" id="burst-'+i+'"></span>';
+      b.addEventListener("click", function(){ giveToStudent(i); });
+      return b;
+    }
+    function renderStars(i){
+      var n = state.stars[i], out = "";
+      for (var k=0;k<Math.min(n,5);k++) out += "⭐";
+      if (n > 5) out += " +" + (n-5);
+      $("stars-"+i).textContent = out;
+    }
+    function burst(i){
+      var host = $("burst-"+i); if (!host) return;
+      host.innerHTML = "";
+      var dirs = [[-34,-30],[30,-34],[0,-44],[-44,4],[42,2],[-18,-52]];
+      dirs.forEach(function(d){
+        var s = document.createElement("i");
+        s.textContent = "⭐"; s.style.setProperty("--dx", d[0]+"px"); s.style.setProperty("--dy", d[1]+"px");
+        host.appendChild(s);
+      });
+      setTimeout(function(){ host.innerHTML=""; }, 900);
+    }
+
+    function giveToStudent(i){
+      if (!state.held){
+        say("Pick a problem card from the board first, " + STUDENTS[i].name + " is ready when you are! Tap a card up top. 👆");
+        $("board").classList.remove("shake"); void $("board").offsetWidth; $("board").classList.add("shake");
+        return;
+      }
+      state.current = state.held; state.currentStudent = i;
+      openSheet();
+    }
+
+    /* ================= solve sheet ================= */
+    var overlay = $("overlay");
+    function shuffle(arr){
+      var a = arr.slice();
+      for (var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+      return a;
+    }
+    function openSheet(){
+      var p = state.current, st = STUDENTS[state.currentStudent], s = SUBJECTS[p.s];
+      var match = st.fav === p.s;
+      $("forAvatar").innerHTML = avatarSVG(state.currentStudent, 52);
+      $("forWho").textContent = st.name + " is working on this one";
+      $("matchNote").textContent = match ? "⭐ Favorite subject match — bonus +5 points!" : ("⭐ " + st.name + "'s favorite is " + SUBJECTS[st.fav].label);
+      var tag = $("qTag");
+      tag.innerHTML = '<span class="subj-dot" style="background:'+s.color+';display:inline-block;vertical-align:-1px;margin-right:6px"></span>' + s.icon + " " + s.label + " · " + p.t;
+      $("qText").textContent = p.q;
+      $("feedback").textContent = ""; $("feedback").className = "feedback";
+      $("hint").textContent = "";
+      $("nextBtn").style.display = "none"; $("putBackBtn").style.display = "";
+      var box = $("choices"); box.innerHTML = "";
+      var correctText = p.c[p.a];
+      shuffle(p.c).forEach(function(choice){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "choice"; b.textContent = choice;
+        b.addEventListener("click", function(){ answer(b, choice === correctText); });
+        box.appendChild(b);
+      });
+      overlay.classList.add("open");
+    }
+    function answer(btn, right){
+      var p = state.current, st = STUDENTS[state.currentStudent];
+      if (right){
+        btn.classList.add("right");
+        var all = $("choices").querySelectorAll(".choice");
+        all.forEach(function(x){ x.disabled = true; });
+        var match = st.fav === p.s;
+        var pts = 10 + (match ? 5 : 0);
+        state.score += pts; state.solved += 1; state.streak += 1;
+        state.stars[state.currentStudent] += 1;
+        $("feedback").textContent = "🎉 That's right, " + st.name + "! +" + pts + " points" + (match ? " — favorite subject bonus!" : "!");
+        $("feedback").className = "feedback good";
+        $("hint").textContent = "";
+        goodSound();
+        renderStats(); renderStars(state.currentStudent);
+        $("putBackBtn").style.display = "none"; $("nextBtn").style.display = "";
+        say(praise(st.name));
+      } else {
+        btn.classList.add("wrong"); btn.disabled = true;
+        state.streak = 0; renderStats();
+        $("feedback").textContent = "Not quite — try again, " + st.name + "! You can do it. 💪";
+        $("feedback").className = "feedback bad";
+        $("hint").textContent = "💡 Hint: " + p.h;
+        tone(220,.18,0);
+      }
+    }
+    function praise(name){
+      var lines = [
+        "Wonderful work, " + name + "! That's another lamb led to the right answer. 🐑",
+        "Well done, " + name + "! Miss Shepherd is smiling — one more star on the chart!",
+        "Great solving, " + name + "! The whole flock is proud of you.",
+        "That's the way, " + name + "! Learning looks good on you. ⭐"
+      ];
+      return lines[Math.floor(Math.random()*lines.length)];
+    }
+    function closeSheetAndDeal(){
+      overlay.classList.remove("open");
+      var slot = state.heldSlot;
+      burst(state.currentStudent);
+      var desk = $("student-"+state.currentStudent);
+      if (desk){ desk.classList.add("done-flash"); setTimeout(function(){ desk.classList.remove("done-flash"); }, 1600); }
+      state.held = null; state.current = null;
+      if (slot >= 0){ state.board[slot] = randomProblem(state.board.filter(Boolean)); }
+      state.heldSlot = -1;
+      renderBoard(); renderHeld();
+      if (state.solved >= GOAL && !state.celebrated){
+        state.celebrated = true;
+        $("celebrateText").textContent = "The class filled the whole star chart with " + state.solved + " problems solved and " + state.score + " points. Miss Shepherd is so proud of her flock — every student worked hard and learned something new!";
+        $("celebrate").classList.add("open");
+        goodSound(); setTimeout(goodSound, 250);
+      } else {
+        say("Who's next? Pull another problem down from the board and pick a student to hand it to!");
+      }
+    }
+    $("putBackBtn").addEventListener("click", function(){
+      overlay.classList.remove("open");
+      state.current = null;
+      say("No problem — the card stays in my hand. Tap a different student, or tap the card on the board to put it back.");
+    });
+    $("nextBtn").addEventListener("click", closeSheetAndDeal);
+    $("keepGoingBtn").addEventListener("click", function(){
+      $("celebrate").classList.remove("open");
+      GOAL += 24; state.celebrated = false; renderStats();
+      say("Back to learning! The star chart has a fresh row — let's fill it again, class!");
+    });
+
+    /* ================= filters & stats ================= */
+    function buildFilters(){
+      var host = $("filters"); host.innerHTML = "";
+      var keys = ["all"].concat(Object.keys(SUBJECTS));
+      keys.forEach(function(k){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "chip";
+        b.setAttribute("aria-pressed", state.filter===k ? "true" : "false");
+        b.textContent = k==="all" ? "🌈 All kinds" : SUBJECTS[k].icon + " " + SUBJECTS[k].label;
+        b.addEventListener("click", function(){
+          state.filter = k; state.held = null; state.heldSlot = -1;
+          buildFilters(); dealBoard(); renderHeld();
+          say(k==="all" ? "All kinds of problems are on the board now!" : SUBJECTS[k].label + " problems coming up! Pick a card.");
+        });
+        host.appendChild(b);
+      });
+    }
+    function renderStats(){
+      $("statScore").textContent = state.score;
+      $("statSolved").textContent = state.solved;
+      $("statStreak").textContent = state.streak;
+      var done = Math.min(state.solved, GOAL);
+      $("goalText").textContent = state.solved + " / " + GOAL + " stars to the class party";
+      $("goalFill").style.width = (state.solved/GOAL*100) + "%";
+    }
+    $("soundBtn").addEventListener("click", function(){
+      state.sound = !state.sound;
+      this.textContent = state.sound ? "🔊 Sound on" : "🔇 Sound off";
+      this.setAttribute("aria-pressed", state.sound ? "true" : "false");
+      if (state.sound) pullSound();
+    });
+
+    /* ================= go ================= */
+    buildFilters();
+    buildClassroom();
+    dealBoard();
+    renderHeld();
+    renderStats();
+    </script>
+  </body>
+</html>
