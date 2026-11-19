@@ -289,6 +289,8 @@ function htmlResponse(body, status) {
   const page = `<!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="/js/gtag.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-LCYP2G9H7J"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
