@@ -12,7 +12,7 @@
   // Cache-bust a card image after its screenshot is retaken (e.g. ?v=2).
   var SHOT_VERSIONS = { "oklahoma-trivia": 2 };
   // Version override when a game is republished without a Lab Notes entry.
-  var VERSION_OVERRIDES = { "oklahoma-trivia": { version: "v3", play_url: "/games/oklahoma-trivia/v3/" } };
+  var VERSION_OVERRIDES = { "oklahoma-trivia": { version: "v3", play_url: "/games/oklahoma-trivia/v3/" }, "boss-monster-tower-defense": { version: "v12", play_url: "/games/boss-monster-tower-defense/v12/" } };
   // Display names where the Lab Notes game name differs from the project name.
   var DISPLAY_NAMES = { "Loading Screen and Lobby": "Lobby Game" };
   function slugFrom(url) {
