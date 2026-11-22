@@ -2,6 +2,17 @@
   "description": "What Ridge and Rhett have been building lately. Newest first.",
   "entries": [
     {
+      "id": "hide-and-seek-v1",
+      "date": "2026-11-21",
+      "date_display": "Nov 21, 2026",
+      "who": "Dad",
+      "game": "Hide and Seek",
+      "version": "v1",
+      "title": "Hide and Seek v1 — New game",
+      "note": "21 kids stand together, 20 run off and hide in an old abandoned warehouse — run around inside and find them fast.",
+      "play_url": "/games/hide-and-seek/v1/"
+    },
+    {
       "id": "boss-monster-tower-defense-v17",
       "date": "2026-11-21",
       "date_display": "Nov 21, 2026",
