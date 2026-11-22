@@ -2,6 +2,17 @@
   "description": "What Ridge and Rhett have been building lately. Newest first.",
   "entries": [
     {
+      "id": "boss-monster-tower-defense-v18",
+      "date": "2026-11-21",
+      "date_display": "Nov 21, 2026",
+      "who": "Ridge",
+      "game": "Boss Monster Tower Defense",
+      "version": "v18",
+      "title": "Boss Monster Tower Defense v18 — Messages move to the coin row",
+      "note": "The pop-up messages no longer flash in the middle of the screen — they now sit on the same row as the coin amount at the bottom of the board.",
+      "play_url": "/games/boss-monster-tower-defense/v18/"
+    },
+    {
       "id": "hide-and-seek-v2",
       "date": "2026-11-21",
       "date_display": "Nov 21, 2026",
