@@ -2,6 +2,17 @@
   "description": "What Ridge and Rhett have been building lately. Newest first.",
   "entries": [
     {
+      "id": "hide-and-seek-v2",
+      "date": "2026-11-21",
+      "date_display": "Nov 21, 2026",
+      "who": "Dad",
+      "game": "Hide and Seek",
+      "version": "v2",
+      "title": "Hide and Seek v2 — Pop-up messages moved to the bottom",
+      "note": "Pop-up messages now appear at the bottom instead of the middle.",
+      "play_url": "/games/hide-and-seek/v2/"
+    },
+    {
       "id": "hide-and-seek-v1",
       "date": "2026-11-21",
       "date_display": "Nov 21, 2026",
