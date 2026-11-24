@@ -2,6 +2,17 @@
   "description": "What Ridge and Rhett have been building lately. Newest first.",
   "entries": [
     {
+      "id": "hide-and-seek-v3",
+      "date": "2026-11-24",
+      "date_display": "Nov 24, 2026",
+      "who": "Dad",
+      "game": "Hide and Seek",
+      "version": "v3",
+      "title": "Hide and Seek v3 — Double-tap zoom disabled",
+      "note": "Double-tap no longer zooms the game on phones.",
+      "play_url": "/games/hide-and-seek/v3/"
+    },
+    {
       "id": "boss-monster-tower-defense-v18",
       "date": "2026-11-21",
       "date_display": "Nov 21, 2026",
